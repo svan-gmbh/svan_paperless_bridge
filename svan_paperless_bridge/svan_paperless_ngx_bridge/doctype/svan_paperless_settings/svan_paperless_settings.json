@@ -1,0 +1,193 @@
+{
+ "actions": [],
+ "creation": "2026-08-19 00:00:00.000000",
+ "doctype": "DocType",
+ "editable_grid": 1,
+ "engine": "InnoDB",
+ "field_order": [
+  "grundlagen_section",
+  "api_url",
+  "api_token",
+  "default_correspondent",
+  "svan_default_correspondent_id",
+  "whitelist_section",
+  "whitelisted_doctypes",
+  "filetype_whitelist_section",
+  "whitelisted_file_types",
+  "nachbearbeitung_section",
+  "delete_physical_file",
+  "vorschau_section",
+  "enforce_document_permissions",
+  "webhook_section",
+  "webhook_secret",
+  "laufzeit_section",
+  "api_call_timeout",
+  "max_runtime_seconds",
+  "max_files_per_run",
+  "sync_config_version"
+ ],
+ "fields": [
+  {
+   "fieldname": "grundlagen_section",
+   "fieldtype": "Section Break",
+   "label": "Basics"
+  },
+  {
+   "description": "E.g. https://paperless.example.com/api/",
+   "fieldname": "api_url",
+   "fieldtype": "Data",
+   "in_list_view": 1,
+   "label": "API URL",
+   "options": "URL",
+   "reqd": 1
+  },
+  {
+   "description": "MUST belong to an unrestricted (superuser) account - this is checked on save. For files it is not allowed to see, a restricted token would report \"no longer exists\" instead of \"no permission\" and thereby allow a deletion in ERPNext that should have been blocked.",
+   "fieldname": "api_token",
+   "fieldtype": "Password",
+   "label": "API Token",
+   "reqd": 1
+  },
+  {
+   "description": "Name, matched case-insensitively.",
+   "fieldname": "default_correspondent",
+   "fieldtype": "Data",
+   "label": "Default Correspondent",
+   "reqd": 1
+  },
+  {
+   "description": "Filled automatically on save from the correspondent that was found (see connection test).",
+   "fieldname": "svan_default_correspondent_id",
+   "fieldtype": "Data",
+   "hidden": 1,
+   "label": "Correspondent ID",
+   "read_only": 1
+  },
+  {
+   "fieldname": "whitelist_section",
+   "fieldtype": "Section Break",
+   "label": "DocType Whitelist"
+  },
+  {
+   "description": "Only files attached to one of the DocTypes listed here are synced to Paperless NGX by the scheduled job. If the list is empty, nothing is synced. The \"Party Fieldname\" column optionally defines which field on that DocType holds the party (e.g. Supplier/Customer) used as the document-specific correspondent.",
+   "fieldname": "whitelisted_doctypes",
+   "fieldtype": "Table",
+   "label": "Allowed DocTypes",
+   "options": "SVAN Paperless Whitelisted DocType"
+  },
+  {
+   "fieldname": "filetype_whitelist_section",
+   "fieldtype": "Section Break",
+   "label": "File Type Whitelist"
+  },
+  {
+   "description": "Only files with an extension or MIME type listed here are synced, independently of the DocType whitelist above. If the list is empty, nothing is synced.",
+   "fieldname": "whitelisted_file_types",
+   "fieldtype": "Table MultiSelect",
+   "label": "Allowed File Types",
+   "options": "SVAN Paperless Whitelisted File Type"
+  },
+  {
+   "default": "1",
+   "description": "Internal counter, incremented automatically whenever the whitelist changes. Determines which files the scheduled job re-evaluates for sync relevance on its next run.",
+   "fieldname": "sync_config_version",
+   "fieldtype": "Int",
+   "hidden": 1,
+   "label": "Sync Config Version",
+   "read_only": 1
+  },
+  {
+   "fieldname": "nachbearbeitung_section",
+   "fieldtype": "Section Break",
+   "label": "After The Transfer"
+  },
+  {
+   "default": "1",
+   "description": "Once the transfer has finished, deletes the physical file and points the file URL at an internal preview route that fetches the content server-side on demand. The File document itself is kept; only the local file content is removed.",
+   "fieldname": "delete_physical_file",
+   "fieldtype": "Check",
+   "label": "Delete Physical File After Transfer"
+  },
+  {
+   "fieldname": "vorschau_section",
+   "fieldtype": "Section Break",
+   "label": "Preview Access Control"
+  },
+  {
+   "default": "1",
+   "description": "When the internal preview route is called for a private file, additionally checks whether the user has access according to Paperless NGX's own document permissions. This requires the user to have a personal API token (section \"SVAN Paperless NGX\" in their user account). If the token is missing or access is denied, the preview is refused. When disabled, only Frappe's own File permissions apply; non-private files are always exempt.",
+   "fieldname": "enforce_document_permissions",
+   "fieldtype": "Check",
+   "label": "Enforce Paperless NGX Document Permissions On Preview"
+  },
+  {
+   "description": "Create the workflow for this manually in Paperless NGX:<ul><li><b>Trigger type</b>: \"Document Updated\"</li><li><b>Action type</b>: \"Webhook\"</li><li><b>Webhook URL</b> (example): <code>https://erp.example.com/api/method/svan_paperless_bridge.webhook_sync.receive_update</code></li><li><b>Use parameters for webhook body</b>: NOT set</li><li><b>Send webhook payload as JSON</b>: set</li><li><b>Webhook body</b>: <code>{\"document_id\": {{ doc_id }}}</code></li><li><b>Webhook header</b>: <code>Webhook-Secret</code> = the value from the \"Webhook Secret\" field below</li></ul>",
+   "fieldname": "webhook_section",
+   "fieldtype": "Section Break",
+   "label": "Feedback From Paperless NGX (Webhook)"
+  },
+  {
+   "fieldname": "webhook_secret",
+   "fieldtype": "Data",
+   "label": "Webhook Secret"
+  },
+  {
+   "fieldname": "laufzeit_section",
+   "fieldtype": "Section Break",
+   "hidden": 1,
+   "label": "Scheduled Job Settings"
+  },
+  {
+   "default": "30",
+   "description": "For a single upload call.",
+   "fieldname": "api_call_timeout",
+   "fieldtype": "Int",
+   "hidden": 1,
+   "label": "API Timeout (Seconds)",
+   "non_negative": 1
+  },
+  {
+   "default": "240",
+   "description": "After this, the scheduled job stops itself in a controlled way. Frappe forcibly terminates scheduled jobs of this kind after 300 seconds, so this value should stay well below that. Does NOT apply to the manual \"Transfer New Files\" button.",
+   "fieldname": "max_runtime_seconds",
+   "fieldtype": "Int",
+   "hidden": 1,
+   "label": "Maximum Runtime (Seconds)",
+   "non_negative": 1
+  },
+  {
+   "default": "100",
+   "description": "Remaining files stay \"pending\" and are processed in the next run. Does NOT apply to the manual \"Transfer New Files\" button.",
+   "fieldname": "max_files_per_run",
+   "fieldtype": "Int",
+   "hidden": 1,
+   "label": "Maximum Files Per Run",
+   "non_negative": 1
+  }
+ ],
+ "index_web_pages_for_search": 0,
+ "issingle": 1,
+ "links": [],
+ "modified": "2026-10-05 15:40:00.000000",
+ "modified_by": "Administrator",
+ "module": "SVAN Paperless NGX Bridge",
+ "name": "SVAN Paperless Settings",
+ "owner": "Administrator",
+ "permissions": [
+  {
+   "create": 1,
+   "delete": 1,
+   "email": 1,
+   "export": 1,
+   "print": 1,
+   "read": 1,
+   "role": "System Manager",
+   "share": 1,
+   "write": 1
+  }
+ ],
+ "sort_field": "modified",
+ "sort_order": "DESC",
+ "states": [],
+ "track_changes": 1
+}

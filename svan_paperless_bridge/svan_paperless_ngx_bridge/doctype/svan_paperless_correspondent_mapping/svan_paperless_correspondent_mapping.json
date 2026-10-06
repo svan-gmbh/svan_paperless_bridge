@@ -1,0 +1,85 @@
+{
+ "actions": [],
+ "autoname": "hash",
+ "creation": "2026-08-27 00:00:00.000000",
+ "doctype": "DocType",
+ "editable_grid": 1,
+ "engine": "InnoDB",
+ "field_order": [
+  "paperless_correspondent_id",
+  "frappe_party_type",
+  "frappe_party",
+  "bidirectional",
+  "last_synced"
+ ],
+ "fields": [
+  {
+   "description": "Assigned by the API.",
+   "fieldname": "paperless_correspondent_id",
+   "fieldtype": "Int",
+   "hidden": 1,
+   "label": "Paperless Correspondent ID",
+   "read_only": 1,
+   "reqd": 1,
+   "unique": 1
+  },
+  {
+   "description": "E.g. \"Supplier\" or \"Customer\".",
+   "fieldname": "frappe_party_type",
+   "fieldtype": "Link",
+   "in_list_view": 1,
+   "in_standard_filter": 1,
+   "label": "Party DocType",
+   "options": "DocType"
+  },
+  {
+   "description": "As long as this is filled in, the field is never changed automatically again.",
+   "fieldname": "frappe_party",
+   "fieldtype": "Dynamic Link",
+   "in_list_view": 1,
+   "in_standard_filter": 1,
+   "label": "Party",
+   "options": "frappe_party_type"
+  },
+  {
+   "default": "1",
+   "description": "If this correspondent is renamed, replaced or removed in Paperless NGX, this option applies the change in ERPNext: it renames the display name of the linked master record (e.g. Customer/Supplier) and relinks or clears the party field on business documents. Switched off automatically for party types whose display name cannot be written back (e.g. \"Contact\", whose display name is calculated from several fields). Syncing from ERPNext to Paperless NGX is independent of this option and always runs.",
+   "fieldname": "bidirectional",
+   "fieldtype": "Check",
+   "in_list_view": 1,
+   "label": "Bidirectional"
+  },
+  {
+   "description": "When this mapping was last created or confirmed during a file upload.",
+   "fieldname": "last_synced",
+   "fieldtype": "Datetime",
+   "label": "Last Synced",
+   "read_only": 1
+  }
+ ],
+ "index_web_pages_for_search": 0,
+ "links": [],
+ "modified": "2026-08-27 00:00:00.000000",
+ "modified_by": "Administrator",
+ "module": "SVAN Paperless NGX Bridge",
+ "name": "SVAN Paperless Correspondent Mapping",
+ "owner": "Administrator",
+ "permissions": [
+  {
+   "create": 0,
+   "delete": 1,
+   "email": 1,
+   "export": 1,
+   "print": 1,
+   "read": 1,
+   "role": "System Manager",
+   "share": 1,
+   "write": 1
+  }
+ ],
+ "sort_field": "modified",
+ "sort_order": "DESC",
+ "states": [],
+ "title_field": "frappe_party",
+ "track_changes": 1
+}

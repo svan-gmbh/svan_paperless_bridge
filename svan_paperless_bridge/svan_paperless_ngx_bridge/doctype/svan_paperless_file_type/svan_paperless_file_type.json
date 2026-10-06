@@ -1,0 +1,54 @@
+{
+ "actions": [],
+ "autoname": "field:file_extension",
+ "creation": "2026-08-26 00:00:00.000000",
+ "doctype": "DocType",
+ "editable_grid": 1,
+ "engine": "InnoDB",
+ "field_order": [
+  "file_extension",
+  "mime_type"
+ ],
+ "fields": [
+  {
+   "description": "Without a leading dot, e.g. \"EXE\" (converted to upper case on save so it matches the extension Frappe determines internally).",
+   "fieldname": "file_extension",
+   "fieldtype": "Data",
+   "in_list_view": 1,
+   "label": "File Extension",
+   "reqd": 1,
+   "unique": 1
+  },
+  {
+   "description": "Optional, e.g. \"application/x-msdownload\".",
+   "fieldname": "mime_type",
+   "fieldtype": "Data",
+   "in_list_view": 1,
+   "label": "MIME Type"
+  }
+ ],
+ "index_web_pages_for_search": 0,
+ "links": [],
+ "modified": "2026-08-26 00:00:00.000000",
+ "modified_by": "Administrator",
+ "module": "SVAN Paperless NGX Bridge",
+ "name": "SVAN Paperless File Type",
+ "owner": "Administrator",
+ "permissions": [
+  {
+   "create": 1,
+   "delete": 1,
+   "email": 1,
+   "export": 1,
+   "print": 1,
+   "read": 1,
+   "role": "System Manager",
+   "share": 1,
+   "write": 1
+  }
+ ],
+ "sort_field": "modified",
+ "sort_order": "DESC",
+ "states": [],
+ "track_changes": 1
+}

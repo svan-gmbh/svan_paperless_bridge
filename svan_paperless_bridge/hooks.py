@@ -8,18 +8,13 @@ app_license = "gpl-3.0"
 # Apps
 # ------------------
 
-# required_apps = []
+required_apps = ["svan_base"]
 
-# Each item in the list will be shown as an app in the apps page
-# add_to_apps_screen = [
-# 	{
-# 		"name": "svan_paperless_bridge",
-# 		"logo": "/assets/svan_paperless_bridge/logo.png",
-# 		"title": "SVAN Paperless NGX Bridge",
-# 		"route": "/svan_paperless_bridge",
-# 		"has_permission": "svan_paperless_bridge.api.permission.has_app_permission"
-# 	}
-# ]
+# No add_to_apps_screen: the workspace hangs below svan_base's "SVAN" entry via parent_page.
+# Its JSON therefore deliberately says "app": "svan_base": create_desktop_icons_from_workspace()
+# takes the parent icon from that app's "App" icon; with this app's name the icon would land
+# at top level. JSON allows no comments - do not "correct" the value.
+# add_to_apps_screen = []
 
 # Includes in <head>
 # ------------------
@@ -43,8 +38,13 @@ app_license = "gpl-3.0"
 # page_js = {"page" : "public/js/file.js"}
 
 # include js in doctype views
-# doctype_js = {"doctype" : "public/js/doctype.js"}
-# doctype_list_js = {"doctype" : "public/js/doctype_list.js"}
+doctype_js = {
+	"File": ["public/js/file.js", "public/js/file_duplicates.js"],
+	"User": "public/js/user.js",
+}
+doctype_list_js = {
+	"SVAN Paperless Custom Field Mapping": "public/js/svan_paperless_custom_field_mapping_list.js"
+}
 # doctype_tree_js = {"doctype" : "public/js/doctype_tree.js"}
 # doctype_calendar_js = {"doctype" : "public/js/doctype_calendar.js"}
 
@@ -86,7 +86,7 @@ app_license = "gpl-3.0"
 # ------------
 
 # before_install = "svan_paperless_bridge.install.before_install"
-# after_install = "svan_paperless_bridge.install.after_install"
+after_install = "svan_paperless_bridge.install.after_install"
 
 # Uninstallation
 # ------------
@@ -138,34 +138,43 @@ app_license = "gpl-3.0"
 # ---------------
 # Hook on document methods and events
 
-# doc_events = {
-# 	"*": {
-# 		"on_update": "method",
-# 		"on_cancel": "method",
-# 		"on_trash": "method"
-# 	}
-# }
+doc_events = {
+	"File": {
+		"before_insert": "svan_paperless_bridge.file_events.set_default_source",
+		"after_insert": "svan_paperless_bridge.file_events.sync_immediately",
+		"on_trash": "svan_paperless_bridge.file_events.delete_from_paperless",
+	},
+	# on_change, not on_update: on_update does not fire for allow_on_submit changes
+	# on submitted documents.
+	"*": {
+		"on_change": "svan_paperless_bridge.change_watch.handle_watched_doctype_on_change",
+	},
+	"Tag Link": {
+		"after_insert": "svan_paperless_bridge.change_watch.handle_tag_link_change",
+		"on_trash": "svan_paperless_bridge.change_watch.handle_tag_link_change",
+	},
+	# Renaming a Tag rewrites "Tag Link.tag" by raw SQL; no Tag Link event fires.
+	"Tag": {
+		"after_rename": "svan_paperless_bridge.change_watch.handle_tag_rename",
+	},
+}
 
 # Scheduled Tasks
 # ---------------
 
-# scheduler_events = {
-# 	"all": [
-# 		"svan_paperless_bridge.tasks.all"
-# 	],
-# 	"daily": [
-# 		"svan_paperless_bridge.tasks.daily"
-# 	],
-# 	"hourly": [
-# 		"svan_paperless_bridge.tasks.hourly"
-# 	],
-# 	"weekly": [
-# 		"svan_paperless_bridge.tasks.weekly"
-# 	],
-# 	"monthly": [
-# 		"svan_paperless_bridge.tasks.monthly"
-# 	],
-# }
+scheduler_events = {
+	"cron": {
+		"*/5 * * * *": [
+			"svan_paperless_bridge.paperless_sync.sync_pending_files",
+			"svan_paperless_bridge.paperless_sync.poll_syncing_files",
+			"svan_paperless_bridge.paperless_delete.cleanup_deleted_files",
+			"svan_paperless_bridge.paperless_sync.sync_metadata_updates",
+			# Paperless NGX sends no webhook for deleted/renamed tags and custom fields or
+			# renamed correspondents.
+			"svan_paperless_bridge.paperless_sync.reconcile_metadata_changes",
+		]
+	}
+}
 
 # Testing
 # -------
@@ -183,9 +192,11 @@ app_license = "gpl-3.0"
 # Overriding Methods
 # ------------------------------
 #
-# override_whitelisted_methods = {
-# 	"frappe.desk.doctype.event.event.get_events": "svan_paperless_bridge.event.get_events"
-# }
+# The Desk removes a tag by deleting its Tag Link via raw SQL, so
+# doc_events["Tag Link"]["on_trash"] never fires.
+override_whitelisted_methods = {
+	"frappe.desk.doctype.tag.tag.remove_tag": "svan_paperless_bridge.change_watch.remove_tag_override",
+}
 #
 # each overriding function accepts a `data` argument;
 # generated from the base implementation of the doctype dashboard,
@@ -201,7 +212,9 @@ app_license = "gpl-3.0"
 # Ignore links to specified DocTypes when deleting documents
 # -----------------------------------------------------------
 
-# ignore_links_on_delete = ["Communication", "ToDo"]
+# The sync log must never block a File delete: Frappe's link check runs only after
+# on_trash has already deleted the Paperless NGX document.
+ignore_links_on_delete = ["SVAN Paperless Sync Log"]
 
 # Request Events
 # ----------------
@@ -255,4 +268,3 @@ app_license = "gpl-3.0"
 # ------------
 # List of apps whose translatable strings should be excluded from this app's translations.
 # ignore_translatable_strings_from = []
-

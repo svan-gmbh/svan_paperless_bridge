@@ -1,0 +1,76 @@
+{
+ "actions": [],
+ "autoname": "hash",
+ "creation": "2026-08-27 00:00:00.000000",
+ "doctype": "DocType",
+ "editable_grid": 1,
+ "engine": "InnoDB",
+ "field_order": [
+  "paperless_tag_id",
+  "frappe_tag",
+  "bidirectional",
+  "last_synced"
+ ],
+ "fields": [
+  {
+   "description": "Assigned by the API.",
+   "fieldname": "paperless_tag_id",
+   "fieldtype": "Int",
+   "hidden": 1,
+   "label": "Paperless Tag ID",
+   "read_only": 1,
+   "reqd": 1,
+   "unique": 1
+  },
+  {
+   "description": "As long as this is filled in, the field is never changed automatically again.",
+   "fieldname": "frappe_tag",
+   "fieldtype": "Link",
+   "in_list_view": 1,
+   "in_standard_filter": 1,
+   "label": "Frappe Tag",
+   "options": "Tag",
+   "unique": 1
+  },
+  {
+   "default": "1",
+   "description": "If this tag is changed directly in Paperless NGX (webhook), the change is only applied to ERPNext when this option is enabled. Syncing from ERPNext to Paperless NGX is independent of this option and always runs.",
+   "fieldname": "bidirectional",
+   "fieldtype": "Check",
+   "in_list_view": 1,
+   "label": "Bidirectional"
+  },
+  {
+   "description": "When this mapping was last created or confirmed during a file upload.",
+   "fieldname": "last_synced",
+   "fieldtype": "Datetime",
+   "label": "Last Synced",
+   "read_only": 1
+  }
+ ],
+ "index_web_pages_for_search": 0,
+ "links": [],
+ "modified": "2026-08-27 00:00:00.000000",
+ "modified_by": "Administrator",
+ "module": "SVAN Paperless NGX Bridge",
+ "name": "SVAN Paperless Tag Mapping",
+ "owner": "Administrator",
+ "permissions": [
+  {
+   "create": 0,
+   "delete": 1,
+   "email": 1,
+   "export": 1,
+   "print": 1,
+   "read": 1,
+   "role": "System Manager",
+   "share": 1,
+   "write": 1
+  }
+ ],
+ "sort_field": "modified",
+ "sort_order": "DESC",
+ "states": [],
+ "title_field": "frappe_tag",
+ "track_changes": 1
+}

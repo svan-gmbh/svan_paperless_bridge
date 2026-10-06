@@ -1,53 +1,117 @@
-# SVAN Accounting - Agent Guidelines
+# AGENTS.md - svan_paperless_bridge
 
-## 🎯 Naming Conventions
+Frappe app (v16, Python >= 3.14, requires `svan_base`, Paperless NGX >= 3.0) that bridges Frappe's core `File` DocType and Paperless NGX. Attachments of whitelisted DocTypes are uploaded by scheduled jobs, their metadata comes from the business document they are attached to, and changes made later on either side are kept in sync. Module name: "SVAN Paperless NGX Bridge"; DocTypes live in `svan_paperless_bridge/svan_paperless_ngx_bridge/doctype/`.
 
-### Custom Fields
-- **MUSS**: Alle Feldnamen beginnen mit `svan_` (z. B. `svan_direct_debit`)
+This file describes the current state of the code. Rewrite the affected passage when something changes; do not append history.
 
-### Custom DocTypes
-- **MUSS**: Alle eigenen DocTypes beginnen mit `Svan` (z. B. `SvanBankMandate`)
+## Commands
 
-### Patch Files
-- Naming: `add_svan_<feldname>_to_<doctype>.py`
-- Beispiel: `add_svan_direct_debit_to_customer.py`
+- Install/state: `bench --site <site> install-app svan_paperless_bridge`; `after_install` creates the custom fields, fills the file type whitelist and sets the desktop icon logo. `patches.txt` is empty - there are no patches.
+- Changed custom field definitions do NOT arrive via `bench migrate` on existing sites: run `bench --site <site> execute svan_paperless_bridge.custom_fields.create_svan_paperless_custom_fields`.
+- Changed `scheduler_events` in `hooks.py` only take effect after `bench migrate`.
+- Maintenance (testing/debugging), all via `bench --site <site> execute svan_paperless_bridge.utils.maintenance.<fn>`: `reset_sync_state` (clears sync log, tag/correspondent mappings, file sync state; keeps config), `restore_physical_files_from_paperless` (run it BEFORE `reset_sync_state` to cover offloaded files), `reset_settings_to_fresh_install` (then `bench clear-cache`).
+- Lint/format: `ruff` (tabs, line length 110, py314), eslint, prettier via `.pre-commit-config.yaml` (Frappe app template standard). The hook runs on every commit; set it up once per clone with `uv tool install pre-commit && pre-commit install`, run everything manually with `pre-commit run --all-files`. A reformatting shifts the line numbers in the `locale/*.po` comments - regenerate the catalog afterwards.
+- Tests: `bench --site <site> run-tests --app svan_paperless_bridge` against a REAL Paperless NGX; no mocks of the API. Use a dedicated site (only frappe + svan_base + this app) with `allow_tests` and `svan_paperless_test_api_url`/`svan_paperless_test_api_token` (superuser token) in its `site_config.json`; without them the tests are skipped. A full run takes about 2-3 minutes (the upload waits for Paperless NGX to consume each file). `PaperlessTestCase` (`tests/paperless_test_case.py`) configures the Settings, patches `frappe.db.commit` to a no-op (the app commits per file) and rolls back after every test, then clears the Settings document cache and the watched DocType map (Redis is not rolled back). Every name that reaches Paperless NGX (party titles, tags, custom fields, default correspondent, document type, file names) carries a per-test prefix `svantest-<hash>`; `tests/live_paperless.py` deletes exactly that afterwards (documents including the trash, entities, users), and `setUpClass` removes leftovers of aborted runs. "Unreachable" is a dead URL (`127.0.0.1:9`). Business documents are the custom DocTypes `Svan Test Party`/`Svan Test Invoice`, created once per site (DDL commits implicitly, so they stay). Test PDFs come from `make_pdf()` because Frappe parses PDFs on insert. Not testable live and therefore not covered: failed or duplicate-rejected upload tasks (Paperless NGX rejects unreadable content already at upload). Also not covered yet: amend copies, runtime/file limits, maintenance scripts.
+- `README.md` (English) and `README.de.md` (German) are the short user-facing introduction (what the app does, install/configure, where to find things in the UI, update/uninstall steps); keep both in step when UI locations or update steps change. Internals belong here, not there.
+- i18n: all source strings are English. German term for "custom field" (Paperless and Frappe) is "Zusatzfeld"; DocType names and technical identifiers stay English. `_()` in Python, `__()` in JS, German in `locale/de.po`. A `__()` nested inside another `__()` is not extracted (assign it to a variable first). Custom field labels/descriptions in `custom_fields.py` are extracted by `gettext_extractors/custom_field_definitions.py`, registered in `babel_extractors.csv`. Sync log texts stay English and are never wrapped in `_()`.
 
-## 🔧 Patch Implementation
+## Module map (`svan_paperless_bridge/`)
 
-### Required Structure
-```python
-from svan_paperless_bridge.utils.patch_helpers import tracert
+| Module | Responsibility |
+|---|---|
+| `hooks.py` | doc_events, 5 cron jobs, `override_whitelisted_methods`, `ignore_links_on_delete`, `doctype_js` (File, User) |
+| `custom_fields.py` | custom fields on `File` and `User`; fixes `User` field order via a `field_order` property setter |
+| `file_events.py` | thin File hooks: `set_default_source`, `sync_immediately`, `delete_from_paperless` |
+| `paperless_sync.py` | upload, task polling, finalize, metadata push, classification, reconcile, all `trigger_manual_*` buttons |
+| `paperless_delete.py` | File `on_trash` deletion in Paperless, stuck-deletion cleanup |
+| `amend_copy.py` | resets a File copied by an amend into a fresh, unsynced one (restores the content from Paperless) |
+| `change_watch.py` | detects changes on business documents after the initial sync and flags files |
+| `webhook_sync.py` | `receive_update` webhook endpoint: applies Paperless changes to business documents |
+| `tag_sync.py`, `correspondent_sync.py`, `custom_field_sync.py`, `document_type_sync.py` | per-entity lookup/create/map/repair/rename logic |
+| `preview.py` | `stream` route serving content from Paperless; offloaded `file_url` format |
+| `document_access.py` | per-user Paperless permission check, `set_my_paperless_api_token` |
+| `utils/document_claim.py` | `is_document_id_held_by_other_file`: the 1:1 rule File <-> Paperless document |
+| `file_duplicates.py`, `public/js/file_duplicates.js` | "Duplicates" section in the File form sidebar (same `content_hash`, built like the attachments section; no own sidebar hook exists in Frappe, so the markup is appended after `.form-tags`) |
+| `utils/sync_log.py` | `log_sync_event` (own module to avoid a circular import tag_sync <-> paperless_sync) |
+| `utils/default_file_types.py` | default file type whitelist |
+| `utils/field_options.py` | autocomplete options for fieldname fields |
+| `utils/maintenance.py` | debugging scripts, `restore_physical_file_from_paperless` |
+| `public/js/file.js`, `user.js`, `..._list.js` | File preview error/permission handling, no password strength check on token, list indicator |
 
-def execute():
-    tracert(f"START {__file__}")
-    # ... Logic ...
-    tracert(f"END {__file__}")
-```
+## Data model
 
-### Field Creation Pattern
-1. **Prüfe auf Existenz** (`frappe.db.get_value("Custom Field", {...})`)
-2. **Idempotente Aktualisierung** falls Feld existiert
-3. **`tracert()` für ALLE Meldungen** (nicht `frappe.msgprint` direkt)
+DocTypes (all System Manager only; names `SVAN Paperless ...`):
 
-### Tracing (tracert)
-- **MUSS** in jeder Patch-Datei verwendet werden
-- Ersetzt `print()`, `frappe.logger()`, und `frappe.msgprint()`
-- Position: START, END, Success, Error, und alle logischen Schritte
+- **Settings** (single): `api_url`, `api_token` (Password), `default_correspondent` + resolved `svan_default_correspondent_id`, `whitelisted_doctypes` (child), `whitelisted_file_types` (child, MultiSelect), `sync_config_version`, `delete_physical_file` (default on), `enforce_document_permissions` (default on), `webhook_secret`, and three hidden tuning fields: `api_call_timeout` (30), `max_runtime_seconds` (240), `max_files_per_run` (100; `0` pauses uploads while classification still runs).
+- **Whitelisted DocType** (child): `document_type`, `paperless_document_type_name` (defaults to the translated DocType name), resolved `paperless_document_type_id`, `party_fieldname` (Link field, or a Dynamic Link such as `Quotation.party_name` whose type field `quotation_to` must be a Link to DocType or a Select), `party_rename_supported` (computed, always 0 for a Dynamic Link). Each DocType may appear once. The document type mapping lives here; there is no separate mapping DocType for it.
+- **File Type** (named by upper-case extension without dot, matching Frappe's `File.file_type`) + child **Whitelisted File Type**.
+- **Tag Mapping** (`frappe_tag` <-> `paperless_tag_id`, `bidirectional` (default 1, no Settings default), `last_synced`), **Correspondent Mapping** (`frappe_party_type/frappe_party` <-> `paperless_correspondent_id`, `bidirectional` (default 1, no Settings default), `last_synced`), both created automatically. **Custom Field Mapping** (name, type, `bidirectional` (default 1, no Settings default), child **Custom Field Source** = `source_doctype`/`source_fieldname`) is user-maintained configuration; `File` is rejected as a source DocType. One Paperless custom field may be fed from several DocTypes (e.g. one "Customer name" for all sales document types), but each DocType only once per mapping.
+- **Sync Log**: `log_datetime`, `log_type` (Info/Warn/Error), `source`, `reference_file`, `title`, `details`. Read/delete only.
 
-## 📝 Commit Guidelines
+Custom fields on `File` (all `svan_` prefixed, read-only/hidden except status): `svan_paperless_document_id`, `svan_paperless_uuid` (upload task UUID), `svan_paperless_sync_status`, `svan_paperless_config_version_checked`, `svan_source`, `svan_paperless_needs_update`. On `User`: `svan_paperless_api_token` (personal token, Password, no permlevel).
 
-### Commit Message Format
-- **MUSS**: Branch-Name (Ticketnummer) als erstes in der Commit-Message
-- Format: `<branch_name>: <Beschreibung>`
-- Beispiel: `M12645: svan_direct_debit Feld zum Customer DocType hinzugefügt`
+Sync status values: `""` (not relevant) -> `pending` -> `syncing` -> `synced`; terminal: `broken`, `deleted`. Neither `broken` nor `deleted` is ever reclassified automatically (button "Reset Broken" clears status, UUID, document ID and the config stamp of all `broken` files).
 
-## ✅ Checklist Before Commit
-- [ ] Feldname beginnt mit `svan_`
-- [ ] DocType-Name beginnt mit `Svan` (falls zutreffend)
-- [ ] `tracert()` importiert und für alle Meldungen verwendet
-- [ ] Patch in `patches.txt` eingetragen
-- [ ] Idempotenz implementiert
-- [ ] Docstring mit Zweck vorhanden
-- [ ] Commit-Message beginnt mit Branch-Name (Ticketnummer)
+`broken` is reserved for KNOWN unsolvable causes (unsupported file type, duplicate rejection, defective image, content only in Paperless but the document is gone: preview/push 404, amend copy without original). Unknown failures stay `pending` and are retried every run with a Warn entry in the sync log - decided deliberately: Paperless NGX reports task errors only as free text, so a Tika/Gotenberg/OCR problem fixed later must not leave files stuck.
 
-nur ein Test bzgl. PR
+The workspace "Paperless NGX" attaches itself below svan_base's "SVAN" entry (`parent_page`); there is no own `add_to_apps_screen`. The workspace JSON deliberately has `"app": "svan_base"`: Frappe's `create_desktop_icons_from_workspace` resolves the parent icon from that app's "App" desktop icon (the SVAN icon); with this app's own name no app icon exists and the "Paperless NGX" icon would land at top level. Do not "correct" it. The sidebar fixture is `workspace_sidebar/paperless_ngx.json`.
+
+## Flows
+
+**Classification.** `reconcile_file_classification` re-evaluates only files whose `svan_paperless_config_version_checked` differs from `Settings.sync_config_version` (bumped when the DocType or file type SET changes, and manually by code that saves settings with `ignore_validate`). A file is relevant if it is not a folder, not on Dropbox/Google Drive, its `attached_to_doctype` is whitelisted AND (its `file_type` is whitelisted OR the MIME type guessed from the name is). Empty whitelists mean "nothing allowed".
+
+**Upload.** `sync_pending_files` (cron, 5 min) validates settings, classifies, then per file calls `query_uuid`: atomic `pending -> syncing` reservation (raw UPDATE + commit), SHA-256 checksum lookup in Paperless that adopts only a document no other File owns (an orphan, e.g. from an upload whose UUID was never saved): `_adopt_existing_document` first overwrites its metadata with the state of the business document (`_patch_document_metadata`), then sets `svan_paperless_document_id` (the poll job finishes it); a failed push puts the file back to `pending`, HTTP 404 falls through to a normal upload. Otherwise multipart `POST /documents/post_document/` with title, created, correspondent, tags, document_type, custom_fields (JSON string `{id: value}`). `None` values must be omitted (multipart would send the string "None"). The returned task UUID is stored by `save_uuid` (5 attempts; after that status `broken` but the UUID is kept so no duplicate is uploaded). On HTTP 400 with an invalid tag/correspondent/document type/custom field ID the matching `repair_stale_*` runs and the upload is retried once (`MAX_UPLOAD_REPAIR_ATTEMPTS = 2`). A 400 "File type X not supported" marks the file `broken` and removes that extension from the whitelist; a request exception, invalid JSON or any other non-200 status (including an unknown 400) puts it back to `pending` for the next run. A copied attachment from an amended document whose `file_url` is already the preview route (`amend_copy.prepare_amend_copy_for_upload`) gets the original's current content restored from Paperless and its sync fields reset (status `pending` like any new eligible file, UUID and document ID empty, config version stamp `0` so the whitelists are re-checked before the upload, needs-update flag off), so it is uploaded as a document of its own; without a synced original (or on 404) it becomes `broken`, on a transient error it returns to `pending`. `file_events.sync_immediately` makes an optimistic first attempt on insert (5 s timeout, never `broken`, falls back to `pending`).
+
+**Finalize.** `poll_syncing_files` (cron) asks `GET /tasks/?task_id=<uuid>`: `success` -> `related_document_ids[0]`; a failed task or a success without document ID goes back to `pending` without UUID (`_queue_for_new_upload`, retried every run; the failed task created no document), only `duplicate_of` (`PAPERLESS_CONSUMER_DELETE_DUPLICATES=true`, which must be off) and `UNSOLVABLE_TASK_ERROR_RE` (unsupported mime type, defective image conversion) mark the file `broken`. A document ID another File already owns is never taken over: the file clears its UUID and goes back to `pending` for an upload of its own (`_requeue_for_own_document`). After a `_document_still_exists` check (a missing document means a new upload), `finalize_sync` sets `synced`; with `delete_physical_file` it first removes the content on disk and sets `file_url` to the preview route (`/api/method/svan_paperless_bridge.preview.stream/<name>?file_name=<File name>`). The route prefix is duplicated in `preview.PREVIEW_METHOD_PATH` and `public/js/file.js`; keep them equal. `retroactively_delete_physical_files` applies the same to already synced files.
+
+**Preview.** `preview.stream` checks Frappe read permission, then (private files + `enforce_document_permissions`) `document_access.has_paperless_document_access` using the user's own token (HTTP 200 on `GET /documents/<id>/` = access, fail-closed), then downloads with the service token (`?original=true` for natively previewable types). A 404 marks the file `broken`.
+
+**Forward metadata updates.** `change_watch` keeps a cached map of watched DocTypes (whitelisted DocTypes + their party field and, for a Dynamic Link, its type field, mapped custom field source fields, party target DocTypes' title fields). The possible targets of a Dynamic Link are the Select options of its type field, or, for a Link to DocType (open set), the party types present in Correspondent Mappings. The wildcard `on_change` hook returns after one dict lookup for unwatched DocTypes. On a relevant change it flags all `syncing` and `synced` files of that business document (`svan_paperless_needs_update = 1`, raw UPDATE + commit); `syncing` is included because its upload is already sent, the flag waits for `finalize_sync`. `sync_metadata_updates` (cron) then calls `push_metadata_update`: fresh `PATCH /documents/<id>/` (JSON via `frappe.as_json`) with tags, correspondent, document type and custom fields. Paperless replaces the whole `custom_fields` list, so the document's current entries are loaded first and entries not owned by a mapping are preserved; owned IDs without a current value are dropped, which clears them in Paperless. Correspondent: if the DocType has a `party_fieldname` but it is empty, the correspondent is cleared; with no `party_fieldname` the default correspondent applies. Renaming a Frappe tag or a party title field additionally PATCHes the existing Paperless tag/correspondent. The cache is invalidated by Settings and Custom Field Mapping `on_update/on_trash` and by a Correspondent Mapping whose party type is new or changed. Metadata directly on the `File` document is not synced.
+
+**Reverse sync.** `webhook_sync.receive_update` (allow_guest, secret in header `Webhook-Secret`, compared with `hmac.compare_digest`, fail-closed; then elevates to Administrator) takes `document_id`, finds all Files with that ID, deduplicates to business documents, loads the document once and applies, per business document: tags (each tag of the Paperless document gets a mapping row if missing; add and remove only for mapped `bidirectional` rows, unmapped Frappe-side tags are never removed), party relink (per Correspondent Mapping `bidirectional`: `correspondent_sync.ensure_party_for_paperless_correspondent` looks up the row by Paperless ID or, if missing, finds the party by exact title match and creates the row - race handled like tags; 0 matches / correspondent removed clear the link only if the current party's row is bidirectional, >1 matches skip; a Dynamic Link only relinks to a party that already has a row of the document's current party type, the type field is never changed), custom field values (mapping `bidirectional`, non-Link targets only, missing value clears). Every field is saved separately with `doc.save`, 5 attempts, failures only logged. The document type is never synced back. `frappe.flags.svan_paperless_applying_webhook_update` suppresses `change_watch` flagging while Paperless changes are applied (prevents ping-pong).
+
+**Reconcile.** Paperless sends no webhook for deleting/renaming tags or custom fields, or renaming correspondents, so `reconcile_metadata_changes` (cron) fetches each full list once and: tag missing -> remove tag from business documents that have a synced file; tag renamed -> `frappe.rename_doc("Tag")` unless the target exists; correspondent missing -> clear the party link; correspondent renamed -> rename party master record (both only for bidirectional rows); custom field missing -> clear values; custom field renamed/retyped -> update mapping row. Only bidirectional rows are checked for tags and custom fields. Mapping rows are kept so a recreated entity relinks. One shared runtime budget spans the phases.
+
+**Deletion.** `File.on_trash` -> `handle_file_on_trash`: no document ID and no UUID -> nothing; UUID but no document ID -> block (upload still running); another File shares the document ID (legacy data only) -> skip; offloaded content is restored locally first (fail-closed); `enforce_document_permissions` and a non-privileged user (not Administrator/System Manager) -> `DELETE` with the user's own token (no token = blocked), otherwise service token; 204/404 count as success. Afterwards IDs are cleared and status is `deleted` (committed immediately). `cleanup_deleted_files` (cron) retries `frappe.delete_doc` for those. `ignore_links_on_delete = ["SVAN Paperless Sync Log"]` stops log history from blocking the delete after the Paperless document is already gone.
+
+## "Bidirectional" semantics
+
+| Entity | Flag | Effect |
+|---|---|---|
+| Tag Mapping | row, default 1 | webhook add/remove, rename from Paperless, reconcile delete; `0` skips the tag silently |
+| Custom Field Mapping | row, default 1; forced to 0 on every save if any source is a Link field (message for manual edits, silent for the automatic ID save in `custom_field_sync`), no error | webhook value apply/clear, reconcile delete/rename |
+| Correspondent Mapping | row, default 1; forced to 0 on every save if the party type's title field is recalculated on save (e.g. Contact; `can_rename_via_title_field`), without an error | webhook relink/clear of the party link, reconcile rename of the party master record / clear on delete |
+
+All three mapping types use the field default 1; there is no global default in the Settings. Tag and correspondent mappings are created automatically (a new Paperless tag arriving via webhook gets Frappe tag + mapping), custom field mappings only by hand. A mapping row with `bidirectional = 0` is forward-only: its tag, custom field values or party (name/link) are never changed from Paperless.
+
+## Conventions
+
+- Paperless API calls: `requests` with `settings.api_url.rstrip("/")`, `Authorization: Token ...`, `timeout=settings.api_call_timeout or 30`, `verify=True`. No `Accept` version header is sent and only the current Paperless response format is parsed (deliberate, no multi-version support). Lists are paginated (`page_size=100`, follow `next`); the `?name=` filter is not exact, so compare case-insensitively yourself. Read the token with `settings.get_password("api_token", raise_exception=False)`, which also works for unsaved documents.
+- Auto-created Paperless entities (`create_missing_*`) look up by case-insensitive name first and never overwrite a mapping row that points elsewhere (log `Warn`, leave unmapped). Mapping rows are upserted because `paperless_*_id` and `frappe_tag` are unique.
+- A missing tag/correspondent/custom field/document type mapping must never block an upload: failures are logged and the value is skipped.
+- Every error is recorded with `log_sync_event(file_name_or_None, settings, "Info"|"Warn"|"Error", "<module.function or function (CronJob)>", title=..., details=...)`; title is truncated to the field length; failures of logging go to `frappe.log_error`.
+- Scheduled jobs commit after every file/record and wrap each in `try/except` so one failure does not undo or stop the rest. Jobs started by the scheduler respect `max_runtime_seconds` (Frappe kills default-queue jobs after 300 s); the manual buttons call the same functions with `enforce_limits=False` in the `long`/`short` queue and require System Manager.
+- Status and flag changes on `File` use `db_set`/`frappe.db.set_value(..., update_modified=False)` or raw SQL, not `save()`, to avoid hook recursion; steps that must reach a terminal state retry `save()` up to `MAX_SAVE_ATTEMPTS = 5` and finish with a forced `db_set`. `MAX_SAVE_ATTEMPTS` is deliberately duplicated in `webhook_sync.py` and `correspondent_sync.py` to avoid circular imports.
+- Creating a tag or correspondent mapping row can lose a race against a concurrent process (unique constraint on the Paperless ID / Frappe side): `_save_mapping_doc` (one per module) saves inside a savepoint and re-raises `UniqueValidationError`; the callers (`ensure_paperless_tag_mapping`, `ensure_frappe_tag_for_paperless_id`, `auto_create_correspondent_for_party`, `ensure_party_for_paperless_correspondent`) catch it, re-run once and then work with the row that exists now; a second failure is only logged. File Type rows (named by extension) are inserted with `ignore_if_duplicate=True`, so a concurrently created row is simply reused. Custom field mapping rows are never created automatically, so there is no such race.
+- A Paperless document belongs to exactly ONE File (1:1): its tags, correspondent and custom field values come from that File's single business document, so two files must never overwrite each other's values. Identical content in two Files therefore means two Paperless documents (Paperless NGX >= 3 stores duplicates; `PAPERLESS_CONSUMER_DELETE_DUPLICATES` must stay off). The rule is enforced wherever an ID is assigned (checksum adoption, task result in the poll); only files synced before it can still share a document, which deletion and the webhook tolerate.
+- Imports that would be circular are done lazily inside the function (Settings controller <-> `correspondent_sync`/`change_watch`).
+- Parent apps never know their child apps; this app only references `svan_base` (workspace `parent_page`, logo asset path).
+
+## Gotchas
+
+- Frappe does not call `validate()` on child table rows. The Settings and Custom Field Mapping controllers call `validate_party_fieldname`, `update_party_rename_supported`, `validate_source_doctype/-fieldname` explicitly per row.
+- `SVANPaperlessSettings.validate` performs live HTTP calls (default correspondent lookup/creation, superuser check of the token). Code that saves settings programmatically must set `flags.ignore_validate` and, on unconfigured sites, `flags.ignore_mandatory`, and bump `sync_config_version` itself (see `populate_default_whitelist`, `remove_unsupported_file_type_from_whitelist`).
+- Use `on_change` (not `on_update`) for the wildcard hook: `on_update` does not fire for `allow_on_submit` changes on submitted documents.
+- Paperless returns custom field values as JSON types (a date is the string `"2026-03-17"`), Frappe as Python types. `webhook_sync._is_unchanged` compares in the Frappe field's type via `frappe.utils.data.cast`; a plain `==` made every webhook rewrite date fields and bump `modified`.
+- Removing a tag in the Desk deletes the `Tag Link` by raw SQL, so `Tag Link.on_trash` never fires. `change_watch.remove_tag_override` replaces `frappe.desk.doctype.tag.tag.remove_tag` and needs its own `@frappe.whitelist()`. Direct Python calls to `Document.remove_tag` are not detected. Renaming a Tag also bypasses doc events (raw SQL on `Tag Link.tag`): handled by `Tag.after_rename`, which also rewrites the `_user_tags` display column.
+- `change_watch` and `receive_update` call `frappe.db.commit()` inside request/event context on purpose (flag visibility for the next job; log rows must survive a following `frappe.throw`).
+- Paperless answers 404 both for "does not exist" and "no permission". Only the service token (required to be a superuser; Settings warns otherwise) allows reading a 404 as "gone".
+- Only the owner (or a superuser) may delete a document; a "change" object permission is not enough (DELETE answers 403). Deleted documents go to the trash first (`POST /trash/` with `action: empty` removes them for good). `/token/` is throttled (HTTP 429 with `Retry-After`). Only the service token (required to be a superuser; Settings warns otherwise) allows reading a 404 as "gone".
+- Password fields set outside `save()` must use `set_encrypted_password`/`remove_encrypted_password` (see `set_my_paperless_api_token`), otherwise the token lands in plain text in the table.
+- `frappe.rename_doc("Tag", ...)` has no `ignore_permissions`; this is fine because webhook and cron paths already run as Administrator.
+- `File.get_content()` decodes anything readable as UTF-8(-sig)/Windows-1250/-1252 into `str` (small or text files; real PDFs fail the decode and stay bytes). The upload therefore reads with `get_content(encodings=())`; otherwise the content would arrive re-encoded as UTF-8 and its checksum would never match.
+- `File` with `file_url` on the preview route is treated by Frappe as a remote file. `restore_physical_file_from_paperless` clears `file_url` and sets `content` before `save_file(overwrite=True, ignore_existing_file_check=True)`; without that, `save_file` is a no-op or only rewrites the URL.
+
+## Paperless NGX side setup
+
+Not created by the app. Paperless NGX >= 3.0 with `PAPERLESS_CONSUMER_DELETE_DUPLICATES` off (the default), because every File needs a document of its own. In Paperless NGX add a workflow with trigger "Document Updated" and a webhook action to `https://<site>/api/method/svan_paperless_bridge.webhook_sync.receive_update`, header `Webhook-Secret` = Settings `webhook_secret` (button "Generate Secret"; rotate in both places), and a body that carries `document_id`. The service token of the Settings must belong to a superuser; each user who needs per-user checks stores a personal token in the User form ("SVAN Paperless NGX" section).
