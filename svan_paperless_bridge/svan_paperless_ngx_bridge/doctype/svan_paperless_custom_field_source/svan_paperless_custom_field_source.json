@@ -1,0 +1,42 @@
+{
+ "actions": [],
+ "creation": "2026-08-27 00:00:00.000000",
+ "doctype": "DocType",
+ "editable_grid": 1,
+ "engine": "InnoDB",
+ "field_order": [
+  "source_doctype",
+  "source_fieldname"
+ ],
+ "fields": [
+  {
+   "description": "E.g. \"Purchase Invoice\".",
+   "fieldname": "source_doctype",
+   "fieldtype": "Link",
+   "in_list_view": 1,
+   "label": "Source DocType",
+   "options": "DocType",
+   "reqd": 1
+  },
+  {
+   "description": "E.g. \"bill_no\". The input suggests matching fields of the source DocType selected above as you type.",
+   "fieldname": "source_fieldname",
+   "fieldtype": "Autocomplete",
+   "in_list_view": 1,
+   "label": "Source Fieldname",
+   "reqd": 1
+  }
+ ],
+ "index_web_pages_for_search": 0,
+ "istable": 1,
+ "links": [],
+ "modified": "2026-08-27 00:00:00.000000",
+ "modified_by": "Administrator",
+ "module": "SVAN Paperless NGX Bridge",
+ "name": "SVAN Paperless Custom Field Source",
+ "owner": "Administrator",
+ "permissions": [],
+ "sort_field": "modified",
+ "sort_order": "DESC",
+ "states": []
+}

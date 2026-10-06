@@ -1,0 +1,95 @@
+{
+ "app": "svan_paperless_bridge",
+ "creation": "2026-08-27 09:07:21.908631",
+ "docstatus": 0,
+ "doctype": "Workspace Sidebar",
+ "header_icon": "archive",
+ "idx": 0,
+ "items": [
+  {
+   "child": 0,
+   "collapsible": 1,
+   "icon": "settings",
+   "indent": 0,
+   "keep_closed": 0,
+   "label": "Settings",
+   "link_to": "SVAN Paperless Settings",
+   "link_type": "DocType",
+   "show_arrow": 0,
+   "type": "Link"
+  },
+  {
+   "child": 0,
+   "collapsible": 1,
+   "indent": 0,
+   "keep_closed": 0,
+   "label": "File Type",
+   "link_to": "SVAN Paperless File Type",
+   "link_type": "DocType",
+   "show_arrow": 0,
+   "type": "Link"
+  },
+  {
+   "child": 0,
+   "collapsible": 1,
+   "icon": "link",
+   "indent": 1,
+   "keep_closed": 0,
+   "label": "Mapping",
+   "link_type": "DocType",
+   "show_arrow": 0,
+   "type": "Section Break"
+  },
+  {
+   "child": 1,
+   "collapsible": 1,
+   "indent": 0,
+   "keep_closed": 0,
+   "label": "Tags",
+   "link_to": "SVAN Paperless Tag Mapping",
+   "link_type": "DocType",
+   "show_arrow": 0,
+   "type": "Link"
+  },
+  {
+   "child": 1,
+   "collapsible": 1,
+   "indent": 0,
+   "keep_closed": 0,
+   "label": "Custom Fields",
+   "link_to": "SVAN Paperless Custom Field Mapping",
+   "link_type": "DocType",
+   "show_arrow": 0,
+   "type": "Link"
+  },
+  {
+   "child": 1,
+   "collapsible": 1,
+   "indent": 0,
+   "keep_closed": 0,
+   "label": "Correspondents",
+   "link_to": "SVAN Paperless Correspondent Mapping",
+   "link_type": "DocType",
+   "show_arrow": 0,
+   "type": "Link"
+  },
+  {
+   "child": 0,
+   "collapsible": 1,
+   "indent": 0,
+   "keep_closed": 0,
+   "label": "Sync Log",
+   "link_to": "SVAN Paperless Sync Log",
+   "link_type": "DocType",
+   "show_arrow": 0,
+   "type": "Link"
+  }
+ ],
+ "modified": "2026-09-29 15:49:50.000000",
+ "modified_by": "Administrator",
+ "module": "SVAN Paperless NGX Bridge",
+ "name": "Paperless NGX",
+ "owner": "Administrator",
+ "standard": 1,
+ "title": "Paperless NGX"
+}

@@ -1,0 +1,106 @@
+{
+ "actions": [],
+ "autoname": "hash",
+ "creation": "2026-08-27 00:00:00.000000",
+ "doctype": "DocType",
+ "editable_grid": 1,
+ "engine": "InnoDB",
+ "field_order": [
+  "paperless_custom_field_id",
+  "paperless_custom_field_name",
+  "paperless_custom_field_type",
+  "field_sources_count",
+  "bidirectional",
+  "last_synced",
+  "sources_section",
+  "field_sources"
+ ],
+ "fields": [
+  {
+   "description": "Assigned by the API.",
+   "fieldname": "paperless_custom_field_id",
+   "fieldtype": "Int",
+   "hidden": 1,
+   "label": "Paperless Custom Field ID",
+   "read_only": 1
+  },
+  {
+   "description": "Used as the name when the custom field is created automatically. Must be unique - two mapping rows with the same name would collide on the same custom field.",
+   "fieldname": "paperless_custom_field_name",
+   "fieldtype": "Data",
+   "in_list_view": 1,
+   "label": "Paperless Custom Field Name",
+   "reqd": 1,
+   "unique": 1
+  },
+  {
+   "description": "Data type used when creating the custom field automatically.",
+   "fieldname": "paperless_custom_field_type",
+   "fieldtype": "Select",
+   "in_list_view": 1,
+   "label": "Data Type",
+   "options": "\nstring\nurl\ndate\nboolean\ninteger\nfloat\nmonetary\nlongtext"
+  },
+  {
+   "description": "Calculated automatically from the source fields on save. Intended as a list column only and hidden in the form.",
+   "fieldname": "field_sources_count",
+   "fieldtype": "Int",
+   "hidden": 1,
+   "in_list_view": 1,
+   "label": "Source Fields (Count)",
+   "read_only": 1
+  },
+  {
+   "default": "1",
+   "description": "If this custom field value is changed directly in Paperless NGX (webhook), the change is only applied to ALL source fields listed below when this option is enabled. Switched off automatically on save if one of the source fields is a link field. Syncing from ERPNext to Paperless NGX is independent of this option and always runs.",
+   "fieldname": "bidirectional",
+   "fieldtype": "Check",
+   "in_list_view": 1,
+   "label": "Bidirectional"
+  },
+  {
+   "description": "When the Paperless NGX custom field ID was last created or filled in automatically.",
+   "fieldname": "last_synced",
+   "fieldtype": "Datetime",
+   "label": "Last Synced",
+   "read_only": 1
+  },
+  {
+   "fieldname": "sources_section",
+   "fieldtype": "Section Break",
+   "label": "Source Fields"
+  },
+  {
+   "description": "Business DocType/fieldname pairs whose value is transferred as the value of this Paperless custom field when a file is uploaded. If no row exists for the DocType of the uploaded document, the custom field is simply omitted.",
+   "fieldname": "field_sources",
+   "fieldtype": "Table",
+   "label": "Source Fields",
+   "options": "SVAN Paperless Custom Field Source"
+  }
+ ],
+ "index_web_pages_for_search": 0,
+ "links": [],
+ "modified": "2026-08-27 00:00:00.000000",
+ "modified_by": "Administrator",
+ "module": "SVAN Paperless NGX Bridge",
+ "name": "SVAN Paperless Custom Field Mapping",
+ "owner": "Administrator",
+ "permissions": [
+  {
+   "create": 1,
+   "delete": 1,
+   "email": 1,
+   "export": 1,
+   "print": 1,
+   "read": 1,
+   "role": "System Manager",
+   "share": 1,
+   "write": 1
+  }
+ ],
+ "sort_field": "modified",
+ "sort_order": "DESC",
+ "states": [],
+ "title_field": "paperless_custom_field_name",
+ "track_changes": 1
+}

@@ -1,0 +1,67 @@
+{
+ "actions": [],
+ "creation": "2026-08-26 00:00:00.000000",
+ "doctype": "DocType",
+ "editable_grid": 1,
+ "engine": "InnoDB",
+ "field_order": [
+  "document_type",
+  "paperless_document_type_name",
+  "party_fieldname",
+  "party_rename_supported",
+  "paperless_document_type_id"
+ ],
+ "fields": [
+  {
+   "fieldname": "document_type",
+   "fieldtype": "Link",
+   "in_list_view": 1,
+   "label": "DocType",
+   "options": "DocType",
+   "reqd": 1
+  },
+  {
+   "description": "Prefilled with the translated DocType label when the DocType is selected (freely editable) and used on the first file upload to find or create a document type of the same name.",
+   "fieldname": "paperless_document_type_name",
+   "fieldtype": "Data",
+   "in_list_view": 1,
+   "label": "Paperless Document Type Name"
+  },
+  {
+   "description": "Optional. The link field holding the party that becomes the correspondent. Examples: \"customer\" on \"Sales Order\"; \"party_name\" on \"Quotation\" (a dynamic link: whether it is a Customer, Lead, ... comes from \"quotation_to\"). The party is the linked master record and its title field is transferred as the correspondent name. The input only suggests matching link fields. Used to resolve a document-specific correspondent via the correspondent mapping instead of the global default. Leave empty if this DocType has no suitable party.",
+   "fieldname": "party_fieldname",
+   "fieldtype": "Autocomplete",
+   "in_list_view": 1,
+   "label": "Party Fieldname"
+  },
+  {
+   "default": "0",
+   "description": "Determined automatically: whether a correspondent renamed directly in Paperless NGX can be written back to the display name of the party master record linked here (see correspondent_sync.can_rename_via_title_field()).",
+   "fieldname": "party_rename_supported",
+   "fieldtype": "Check",
+   "hidden": 1,
+   "label": "Rename Supported",
+   "read_only": 1
+  },
+  {
+   "description": "Filled automatically on the first file upload for this DocType, as soon as the corresponding document type has been found or created.",
+   "fieldname": "paperless_document_type_id",
+   "fieldtype": "Int",
+   "hidden": 1,
+   "label": "Paperless Document Type ID",
+   "read_only": 1
+  }
+ ],
+ "index_web_pages_for_search": 0,
+ "istable": 1,
+ "links": [],
+ "modified": "2026-10-05 16:30:00.000000",
+ "modified_by": "Administrator",
+ "module": "SVAN Paperless NGX Bridge",
+ "name": "SVAN Paperless Whitelisted DocType",
+ "owner": "Administrator",
+ "permissions": [],
+ "sort_field": "modified",
+ "sort_order": "DESC",
+ "states": []
+}

@@ -1,0 +1,136 @@
+{
+ "app": "svan_base",
+ "charts": [],
+ "content": "[{\"id\":\"u1V2w3X4y5\",\"type\":\"header\",\"data\":{\"text\":\"<span class=\\\"h4\\\"><b>Paperless NGX</b></span>\",\"col\":12}},{\"id\":\"z6A7b8C9d0\",\"type\":\"card\",\"data\":{\"card_name\":\"Settings\",\"col\":4}},{\"id\":\"e1F2g3H4i5\",\"type\":\"card\",\"data\":{\"card_name\":\"Mapping\",\"col\":4}},{\"id\":\"j6K7l8M9n0\",\"type\":\"card\",\"data\":{\"card_name\":\"Log\",\"col\":4}}]",
+ "creation": "2026-09-04 12:00:00.000000",
+ "custom_blocks": [],
+ "docstatus": 0,
+ "doctype": "Workspace",
+ "for_user": "",
+ "hide_custom": 0,
+ "icon": "archive",
+ "idx": 0,
+ "is_hidden": 0,
+ "label": "Paperless NGX",
+ "links": [
+  {
+   "hidden": 0,
+   "is_query_report": 0,
+   "label": "Settings",
+   "link_count": 2,
+   "link_type": "DocType",
+   "onboard": 0,
+   "type": "Card Break"
+  },
+  {
+   "hidden": 0,
+   "is_query_report": 0,
+   "label": "SVAN Paperless Settings",
+   "link_count": 0,
+   "link_to": "SVAN Paperless Settings",
+   "link_type": "DocType",
+   "onboard": 0,
+   "type": "Link"
+  },
+  {
+   "hidden": 0,
+   "is_query_report": 0,
+   "label": "SVAN Paperless File Type",
+   "link_count": 0,
+   "link_to": "SVAN Paperless File Type",
+   "link_type": "DocType",
+   "onboard": 0,
+   "type": "Link"
+  },
+  {
+   "hidden": 0,
+   "is_query_report": 0,
+   "label": "Mapping",
+   "link_count": 3,
+   "link_type": "DocType",
+   "onboard": 0,
+   "type": "Card Break"
+  },
+  {
+   "hidden": 0,
+   "is_query_report": 0,
+   "label": "SVAN Paperless Tag Mapping",
+   "link_count": 0,
+   "link_to": "SVAN Paperless Tag Mapping",
+   "link_type": "DocType",
+   "onboard": 0,
+   "type": "Link"
+  },
+  {
+   "hidden": 0,
+   "is_query_report": 0,
+   "label": "SVAN Paperless Custom Field Mapping",
+   "link_count": 0,
+   "link_to": "SVAN Paperless Custom Field Mapping",
+   "link_type": "DocType",
+   "onboard": 0,
+   "type": "Link"
+  },
+  {
+   "hidden": 0,
+   "is_query_report": 0,
+   "label": "SVAN Paperless Correspondent Mapping",
+   "link_count": 0,
+   "link_to": "SVAN Paperless Correspondent Mapping",
+   "link_type": "DocType",
+   "onboard": 0,
+   "type": "Link"
+  },
+  {
+   "hidden": 0,
+   "is_query_report": 0,
+   "label": "Log",
+   "link_count": 1,
+   "link_type": "DocType",
+   "onboard": 0,
+   "type": "Card Break"
+  },
+  {
+   "hidden": 0,
+   "is_query_report": 0,
+   "label": "SVAN Paperless Sync Log",
+   "link_count": 0,
+   "link_to": "SVAN Paperless Sync Log",
+   "link_type": "DocType",
+   "onboard": 0,
+   "type": "Link"
+  }
+ ],
+ "modified": "2026-09-29 15:49:50.000000",
+ "modified_by": "Administrator",
+ "module": "SVAN Paperless NGX Bridge",
+ "name": "Paperless NGX",
+ "number_cards": [],
+ "owner": "Administrator",
+ "parent_page": "SVAN",
+ "public": 1,
+ "quick_lists": [],
+ "restrict_to_domain": "",
+ "roles": [],
+ "sequence_id": 1.0,
+ "shortcuts": [
+  {
+   "color": "Grey",
+   "doc_view": "List",
+   "label": "SVAN Paperless Settings",
+   "link_to": "SVAN Paperless Settings",
+   "stats_filter": "[]",
+   "type": "DocType"
+  },
+  {
+   "color": "Grey",
+   "doc_view": "List",
+   "label": "SVAN Paperless Sync Log",
+   "link_to": "SVAN Paperless Sync Log",
+   "stats_filter": "[]",
+   "type": "DocType"
+  }
+ ],
+ "title": "Paperless NGX",
+ "type": "Workspace"
+}

@@ -1,0 +1,105 @@
+{
+ "actions": [],
+ "autoname": "hash",
+ "creation": "2026-08-25 00:00:00.000000",
+ "doctype": "DocType",
+ "editable_grid": 1,
+ "engine": "InnoDB",
+ "field_order": [
+  "log_datetime",
+  "log_type",
+  "column_break_1",
+  "source",
+  "reference_file",
+  "section_break_1",
+  "title",
+  "details"
+ ],
+ "fields": [
+  {
+   "default": "Now",
+   "fieldname": "log_datetime",
+   "fieldtype": "Datetime",
+   "in_list_view": 1,
+   "label": "Date/Time",
+   "read_only": 1,
+   "reqd": 1
+  },
+  {
+   "fieldname": "log_type",
+   "fieldtype": "Select",
+   "in_list_view": 1,
+   "in_standard_filter": 1,
+   "label": "Log Type",
+   "options": "Info\nWarn\nError",
+   "read_only": 1,
+   "reqd": 1
+  },
+  {
+   "fieldname": "column_break_1",
+   "fieldtype": "Column Break"
+  },
+  {
+   "fieldname": "source",
+   "fieldtype": "Data",
+   "in_list_view": 1,
+   "label": "Source",
+   "read_only": 1,
+   "reqd": 1
+  },
+  {
+   "description": "Empty for errors that cannot be attributed to a single file (e.g. settings validation).",
+   "fieldname": "reference_file",
+   "fieldtype": "Link",
+   "in_list_view": 1,
+   "in_standard_filter": 1,
+   "label": "File",
+   "options": "File",
+   "read_only": 1
+  },
+  {
+   "fieldname": "section_break_1",
+   "fieldtype": "Section Break"
+  },
+  {
+   "fieldname": "title",
+   "fieldtype": "Data",
+   "in_list_view": 1,
+   "label": "Title",
+   "read_only": 1,
+   "reqd": 1
+  },
+  {
+   "description": "E.g. exception type and traceback.",
+   "fieldname": "details",
+   "fieldtype": "Code",
+   "label": "Details",
+   "read_only": 1
+  }
+ ],
+ "in_create": 0,
+ "index_web_pages_for_search": 0,
+ "links": [],
+ "modified": "2026-08-25 00:00:00.000000",
+ "modified_by": "Administrator",
+ "module": "SVAN Paperless NGX Bridge",
+ "name": "SVAN Paperless Sync Log",
+ "owner": "Administrator",
+ "permissions": [
+  {
+   "delete": 1,
+   "email": 1,
+   "export": 1,
+   "print": 1,
+   "read": 1,
+   "report": 1,
+   "role": "System Manager",
+   "share": 1
+  }
+ ],
+ "sort_field": "log_datetime",
+ "sort_order": "DESC",
+ "states": [],
+ "title_field": "title",
+ "track_changes": 0
+}
