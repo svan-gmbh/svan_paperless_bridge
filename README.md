@@ -1,4 +1,4 @@
-# SVAN Paperless NGX Bridge
+# SVAN Paperless NGX Bridge for ERPNext
 
 [Deutsche Version](README.de.md)
 
