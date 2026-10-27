@@ -1,0 +1,24 @@
+{
+ "app": "svan_paperless_bridge",
+ "creation": "2026-10-23 09:00:00",
+ "docstatus": 0,
+ "doctype": "Dock",
+ "idx": 0,
+ "items": [
+  {
+   "added": 0,
+   "hidden": 0,
+   "icon": "archive",
+   "link_to": "Paperless NGX",
+   "link_type": "Sidebar",
+   "title": "Paperless NGX"
+  }
+ ],
+ "modified": "2026-10-23 09:00:00.000000",
+ "modified_by": "Administrator",
+ "mount_on": "svan_base",
+ "name": "svan_paperless_bridge",
+ "owner": "Administrator",
+ "standard": 1,
+ "user": ""
+}

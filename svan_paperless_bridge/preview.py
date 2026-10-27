@@ -9,6 +9,7 @@ import requests
 from frappe import _
 
 from svan_paperless_bridge.document_access import has_paperless_document_access
+from svan_paperless_bridge.file_versions import own_version_id
 from svan_paperless_bridge.utils.sync_log import log_sync_event
 
 PREVIEW_METHOD_PATH = "svan_paperless_bridge.preview.stream"
@@ -36,8 +37,8 @@ def get_preview_url(file_doc):
 
 
 def is_preview_url(file_url):
-	"""True, wenn file_url bereits auf diese interne Vorschau-Route zeigt -
-	also der physische Original-Inhalt bereits entfernt wurde.
+	"""True if file_url already points at this internal preview route, i.e. the
+	physical content has already been offloaded.
 	"""
 	return bool(file_url) and file_url.startswith(f"/api/method/{PREVIEW_METHOD_PATH}")
 
@@ -62,11 +63,15 @@ def stream(file_name):
 	with the user's.
 
 	An HTTP 404 on the content download (document deleted in Paperless NGX in the
-	meantime) marks the file as "broken" - by project decision the service token is
+	meantime) marks the file as "broken" (paperless_compare.py then deletes it) - by project decision the service token is
 	unrestricted (superuser), so a 404 here really does mean "no longer exists" and
 	not merely "no permission" (unlike in has_paperless_document_access() above,
 	which deliberately treats the same status code as "no access").
 	"""
+	# Frappe's File form appends "?fid=<name>" to file_url without checking for an
+	# existing query string, so file_name arrives as "<name>?fid=<name>". File names
+	# never contain "?".
+	file_name = file_name.split("?", 1)[0]
 	file_doc = frappe.get_doc("File", file_name)
 	frappe.has_permission("File", "read", doc=file_doc, throw=True)
 
@@ -83,9 +88,12 @@ def stream(file_name):
 		)
 
 	token = settings.get_password("api_token", raise_exception=False)
-	url = settings.api_url.rstrip("/") + f"/documents/{document_id}/preview/"
+	# Without version Paperless NGX serves the newest version of the document.
+	url = (
+		settings.api_url.rstrip("/") + f"/documents/{document_id}/preview/?version={own_version_id(file_doc)}"
+	)
 	if NATIVELY_PREVIEWABLE_RE.search(file_doc.file_name or ""):
-		url += "?original=true"
+		url += "&original=true"
 
 	try:
 		response = requests.get(

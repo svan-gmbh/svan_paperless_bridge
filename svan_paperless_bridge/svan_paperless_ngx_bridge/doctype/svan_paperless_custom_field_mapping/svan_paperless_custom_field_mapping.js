@@ -14,6 +14,20 @@ frappe.ui.form.on("SVAN Paperless Custom Field Mapping", {
 			params: { doctype: locals[cdt][cdn].source_doctype },
 		}));
 	},
+
+	before_save(frm) {
+		return svan_paperless.confirm_reference_change(frm);
+	},
+
+	async refresh(frm) {
+		// The reference of the file import is never synced back (enforced on save too).
+		const reference = await frappe.db.get_single_value(
+			"SVAN Paperless Settings",
+			"import_reference_mapping"
+		);
+		const is_reference = !frm.is_new() && reference === frm.doc.name;
+		frm.set_df_property("bidirectional", "read_only", is_reference ? 1 : 0);
+	},
 });
 
 frappe.ui.form.on("SVAN Paperless Custom Field Source", {

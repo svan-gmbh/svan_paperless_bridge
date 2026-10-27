@@ -14,6 +14,7 @@ from pypdf import PdfWriter
 from svan_paperless_bridge.change_watch import invalidate_watched_doctype_map_cache
 from svan_paperless_bridge.paperless_sync import poll_syncing_files, sync_pending_files
 from svan_paperless_bridge.tests.live_paperless import NAME_PREFIX, LivePaperless
+from svan_paperless_bridge.webhook_sync import receive_update
 
 SETTINGS = "SVAN Paperless Settings"
 PARTY_DOCTYPE = "Svan Test Party"
@@ -48,8 +49,9 @@ class PaperlessTestCase(IntegrationTestCase):
 		super().setUp()
 		self.paperless = LivePaperless(self.api_url, self.api_token)
 		self.addCleanup(self.paperless.cleanup)
-		self.addCleanup(self._discard_changes)
+		# Cleanups run in reverse: the commit stays disabled while the changes are discarded.
 		self._start(patch.object(frappe.local.db, "commit"))
+		self.addCleanup(self._discard_changes)
 		self.settings = self.configure_settings()
 
 	def configure_settings(self):
@@ -62,6 +64,12 @@ class PaperlessTestCase(IntegrationTestCase):
 				"webhook_secret": WEBHOOK_SECRET,
 				"delete_physical_file": 0,
 				"enforce_document_permissions": 0,
+				# Deleting deletes in Paperless NGX; test_archive.py switches it on.
+				"archive_deleted_files": 0,
+				# A reference committed on the site would block or move files in every test.
+				"import_reference_mapping": None,
+				"import_tag": None,
+				"import_scan_watermark": None,
 			}
 		)
 		settings.set(
@@ -135,6 +143,11 @@ class PaperlessTestCase(IntegrationTestCase):
 				return status
 			time.sleep(0.5)
 
+	def webhook(self, document_id):
+		"""What Paperless NGX's "Document Updated" workflow sends."""
+		with patch("frappe.get_request_header", return_value=WEBHOOK_SECRET):
+			receive_update(document_id=document_id)
+
 	def document_of(self, file_doc):
 		file_doc.reload()
 		return self.paperless.document(file_doc.svan_paperless_document_id)
@@ -155,6 +168,8 @@ class PaperlessTestCase(IntegrationTestCase):
 		self.addCleanup(patcher.stop)
 
 	def _discard_changes(self):
+		frappe.db.rollback()
+		# What after_rollback callbacks wrote, e.g. the log entry of a blocked deletion.
 		frappe.db.rollback()
 		frappe.set_user("Administrator")
 		frappe.flags.svan_paperless_applying_webhook_update = False

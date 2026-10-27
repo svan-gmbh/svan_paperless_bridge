@@ -3,10 +3,9 @@
 
 import frappe
 from frappe import _
-from frappe.model import no_value_fields
 from frappe.model.document import Document
 
-from svan_paperless_bridge.utils.field_options import get_value_field_options
+from svan_paperless_bridge.utils.field_options import get_value_field_options, is_value_field
 
 
 class SVANPaperlessCustomFieldSource(Document):
@@ -28,7 +27,7 @@ def validate_source_doctype(row):
 
 
 def validate_source_fieldname(row):
-	"""Make sure row.source_fieldname is a real value field on
+	"""Make sure row.source_fieldname is the ID ("name") or a real value field on
 	row.source_doctype (not a structural/layout field without content of its own,
 	such as Section Break or Table).
 
@@ -51,8 +50,7 @@ def validate_source_fieldname(row):
 	if not frappe.db.exists("DocType", row.source_doctype):
 		return
 
-	field = frappe.get_meta(row.source_doctype).get_field(row.source_fieldname)
-	if not field or field.fieldtype in no_value_fields:
+	if not is_value_field(frappe.get_meta(row.source_doctype), row.source_fieldname):
 		frappe.throw(
 			_(
 				"'{0}' is not a valid field on '{1}'. For Source Fieldname, use the technical "
@@ -72,4 +70,4 @@ def get_source_field_options(doctype=None, txt=None):
 	svan_paperless_bridge.utils.field_options.get_value_field_options() (see there
 	for the return format and filter behaviour).
 	"""
-	return get_value_field_options(doctype, txt)
+	return get_value_field_options(doctype, txt, include_id=True)

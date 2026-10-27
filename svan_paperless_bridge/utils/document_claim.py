@@ -12,7 +12,8 @@ def is_document_id_held_by_other_file(document_id, file_name=None):
 	custom field values of that document come from exactly one business document.
 	Checked wherever a document ID is about to be assigned to a File.
 	"""
-	filters = {"svan_paperless_document_id": document_id}
+	# A string: compared with a number, MariaDB ignores the index on the Data column.
+	filters = {"svan_paperless_document_id": str(document_id)}
 	if file_name:
 		filters["name"] = ["!=", file_name]
 	return bool(frappe.db.exists("File", filters))

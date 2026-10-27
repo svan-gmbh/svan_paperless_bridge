@@ -8,20 +8,40 @@ app_license = "gpl-3.0"
 # Apps
 # ------------------
 
-required_apps = ["svan_base"]
+# svan_base is optional: installed, the app joins its "SVAN" entry; without it, the app stands
+# on its own. See navigation.py.
+# required_apps = []
 
-# No add_to_apps_screen: the workspace hangs below svan_base's "SVAN" entry via parent_page.
-# Its JSON therefore deliberately says "app": "svan_base": create_desktop_icons_from_workspace()
-# takes the parent icon from that app's "App" icon; with this app's name the icon would land
-# at top level. JSON allows no comments - do not "correct" the value.
-# add_to_apps_screen = []
+# Declared here, not set as data: Frappe re-reads hooks on every boot, while records set once by
+# a patch are lost whenever Frappe regenerates or replaces its navigation records.
+app_logo_url = "/assets/svan_paperless_bridge/images/svan-logo-icon.svg"
+
+# The own entry only shows in Apps mode while svan_base is not installed (has_permission). The workspace JSON
+# says "parent_page": "SVAN" and "app": "svan_base" for Frappe < 16.50, where it nests below
+# svan_base's entry; JSON allows no comments - do not "correct" the values. Frappe 16.52 ignores
+# both and the dock (dock/) mounts on svan_base instead.
+add_to_apps_screen = [
+	{
+		"name": app_name,
+		"logo": app_logo_url,
+		"title": app_title,
+		"route": "/desk/svan-paperless-settings",
+		"has_permission": "svan_paperless_bridge.navigation.show_own_app_entry",
+	}
+]
 
 # Includes in <head>
 # ------------------
 
 # include js, css files in header of desk.html
-# app_include_css = "/assets/svan_paperless_bridge/css/svan_paperless_bridge.css"
-# app_include_js = "/assets/svan_paperless_bridge/js/svan_paperless_bridge.js"
+# Own bundle name: Frappe's asset manifest is keyed by bundle name across all apps, and svan_base
+# ships svan_marker.bundle.css.
+app_include_css = "svan_paperless_marker.bundle.css"
+app_include_js = [
+	"/assets/svan_paperless_bridge/js/paperless_original_delete.js",
+	"/assets/svan_paperless_bridge/js/reference_change_confirm.js",
+	"/assets/svan_paperless_bridge/js/svan_marker_tooltip.js",
+]
 
 # include js, css files in header of web template
 # web_include_css = "/assets/svan_paperless_bridge/css/svan_paperless_bridge.css"
@@ -43,7 +63,8 @@ doctype_js = {
 	"User": "public/js/user.js",
 }
 doctype_list_js = {
-	"SVAN Paperless Custom Field Mapping": "public/js/svan_paperless_custom_field_mapping_list.js"
+	"SVAN Paperless Custom Field Mapping": "public/js/svan_paperless_custom_field_mapping_list.js",
+	"SVAN Paperless Sync Log": "public/js/svan_paperless_sync_log_list.js",
 }
 # doctype_tree_js = {"doctype" : "public/js/doctype_tree.js"}
 # doctype_calendar_js = {"doctype" : "public/js/doctype_calendar.js"}
@@ -87,11 +108,12 @@ doctype_list_js = {
 
 # before_install = "svan_paperless_bridge.install.before_install"
 after_install = "svan_paperless_bridge.install.after_install"
+after_migrate = "svan_paperless_bridge.navigation.create_desktop_icon"
 
 # Uninstallation
 # ------------
 
-# before_uninstall = "svan_paperless_bridge.uninstall.before_uninstall"
+before_uninstall = "svan_paperless_bridge.navigation.before_uninstall"
 # after_uninstall = "svan_paperless_bridge.uninstall.after_uninstall"
 
 # Integration Setup
@@ -99,8 +121,8 @@ after_install = "svan_paperless_bridge.install.after_install"
 # To set up dependencies/integrations with other apps
 # Name of the app being installed is passed as an argument
 
-# before_app_install = "svan_paperless_bridge.utils.before_app_install"
-# after_app_install = "svan_paperless_bridge.utils.after_app_install"
+before_app_install = "svan_paperless_bridge.navigation.before_app_install"
+after_app_install = "svan_paperless_bridge.navigation.after_app_install"
 
 # Integration Cleanup
 # -------------------
@@ -108,7 +130,7 @@ after_install = "svan_paperless_bridge.install.after_install"
 # Name of the app being uninstalled is passed as an argument
 
 # before_app_uninstall = "svan_paperless_bridge.utils.before_app_uninstall"
-# after_app_uninstall = "svan_paperless_bridge.utils.after_app_uninstall"
+after_app_uninstall = "svan_paperless_bridge.navigation.after_app_uninstall"
 
 # Build
 # ------------------
@@ -141,6 +163,10 @@ after_install = "svan_paperless_bridge.install.after_install"
 doc_events = {
 	"File": {
 		"before_insert": "svan_paperless_bridge.file_events.set_default_source",
+		"validate": [
+			"svan_paperless_bridge.file_events.keep_content_hash",
+			"svan_paperless_bridge.file_events.flag_name_change",
+		],
 		"after_insert": "svan_paperless_bridge.file_events.sync_immediately",
 		"on_trash": "svan_paperless_bridge.file_events.delete_from_paperless",
 	},
@@ -148,6 +174,7 @@ doc_events = {
 	# on submitted documents.
 	"*": {
 		"on_change": "svan_paperless_bridge.change_watch.handle_watched_doctype_on_change",
+		"after_rename": "svan_paperless_bridge.change_watch.handle_watched_doctype_rename",
 	},
 	"Tag Link": {
 		"after_insert": "svan_paperless_bridge.change_watch.handle_tag_link_change",
@@ -168,12 +195,18 @@ scheduler_events = {
 			"svan_paperless_bridge.paperless_sync.sync_pending_files",
 			"svan_paperless_bridge.paperless_sync.poll_syncing_files",
 			"svan_paperless_bridge.paperless_delete.cleanup_deleted_files",
+			# Paperless NGX sends no webhook for a deleted document or a restore from the trash.
+			"svan_paperless_bridge.paperless_compare.compare_with_paperless",
 			"svan_paperless_bridge.paperless_sync.sync_metadata_updates",
 			# Paperless NGX sends no webhook for deleted/renamed tags and custom fields or
 			# renamed correspondents.
 			"svan_paperless_bridge.paperless_sync.reconcile_metadata_changes",
 		]
-	}
+	},
+	# Only a safety net: the webhook imports at once, the button on demand.
+	"daily": [
+		"svan_paperless_bridge.paperless_import.import_from_paperless",
+	],
 }
 
 # Testing
@@ -212,9 +245,9 @@ override_whitelisted_methods = {
 # Ignore links to specified DocTypes when deleting documents
 # -----------------------------------------------------------
 
-# The sync log must never block a File delete: Frappe's link check runs only after
-# on_trash has already deleted the Paperless NGX document.
-ignore_links_on_delete = ["SVAN Paperless Sync Log"]
+# Log and import queue must never block deleting a File (or a business document):
+# Frappe's link check runs only after on_trash has already deleted the Paperless NGX document.
+ignore_links_on_delete = ["SVAN Paperless Sync Log", "SVAN Paperless Import"]
 
 # Request Events
 # ----------------
@@ -260,9 +293,7 @@ ignore_links_on_delete = ["SVAN Paperless Sync Log"]
 # Automatically update python controller files with type annotations for this app.
 # export_python_type_annotations = True
 
-# default_log_clearing_doctypes = {
-# 	"Logging DocType Name": 30  # days to retain logs
-# }
+default_log_clearing_doctypes = {"SVAN Paperless Sync Log": 90}
 
 # Translation
 # ------------

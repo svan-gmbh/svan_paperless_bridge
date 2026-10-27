@@ -52,7 +52,7 @@
   },
   {
    "default": "1",
-   "description": "If this custom field value is changed directly in Paperless NGX (webhook), the change is only applied to ALL source fields listed below when this option is enabled. Switched off automatically on save if one of the source fields is a link field. Syncing from ERPNext to Paperless NGX is independent of this option and always runs.",
+   "description": "If this custom field value is changed directly in Paperless NGX (webhook), the change is only applied to ALL source fields listed below when this option is enabled. Switched off automatically on save if one of the source fields is a link field, and locked while the mapping is the reference of the file import. Syncing from ERPNext to Paperless NGX is independent of this option and always runs.",
    "fieldname": "bidirectional",
    "fieldtype": "Check",
    "in_list_view": 1,
@@ -80,7 +80,7 @@
  ],
  "index_web_pages_for_search": 0,
  "links": [],
- "modified": "2026-08-27 00:00:00.000000",
+ "modified": "2026-10-09 09:00:00.000000",
  "modified_by": "Administrator",
  "module": "SVAN Paperless NGX Bridge",
  "name": "SVAN Paperless Custom Field Mapping",
@@ -98,6 +98,8 @@
    "write": 1
   }
  ],
+ "search_fields": "paperless_custom_field_name",
+ "show_title_field_in_link": 1,
  "sort_field": "modified",
  "sort_order": "DESC",
  "states": [],

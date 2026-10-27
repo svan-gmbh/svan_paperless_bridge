@@ -2,9 +2,9 @@
 Central, current definition of the custom fields svan_paperless_bridge creates on
 the core DocTypes "File" and "User".
 
-Called from install.after_install(). Changes to this definition do not reach an
-existing site via bench migrate (there are no patches) - run
-create_svan_paperless_custom_fields() there with bench execute.
+Called from install.after_install(). Changes to this definition only reach an
+existing site via bench migrate through a patch that calls
+create_svan_paperless_custom_fields(); without one, run it with bench execute.
 """
 
 import frappe
@@ -12,6 +12,8 @@ from frappe.custom.doctype.custom_field.custom_field import create_custom_fields
 from frappe.custom.doctype.property_setter.property_setter import delete_property_setter
 
 USER_DOCTYPE = "User"
+# The SVAN marker's tooltip names the app through it; Frappe also deletes the fields with the app.
+MODULE = "SVAN Paperless NGX Bridge"
 
 
 def get_custom_fields():
@@ -25,13 +27,29 @@ def get_custom_fields():
 				"hidden": 1,
 				"read_only": 1,
 				"no_copy": 1,
+				# Every webhook, comparison and version step looks files up by it.
+				"search_index": 1,
 				"description": "SVAN Paperless NGX Bridge: ",
+			},
+			{
+				"fieldname": "svan_paperless_version_id",
+				"label": "Version ID",
+				"fieldtype": "Data",
+				"insert_after": "svan_paperless_document_id",
+				"hidden": 1,
+				"read_only": 1,
+				"no_copy": 1,
+				"description": (
+					"SVAN Paperless NGX Bridge: "
+					"Version of the Paperless NGX document holding this file's content; equals the "
+					"document ID for the original."
+				),
 			},
 			{
 				"fieldname": "svan_paperless_uuid",
 				"label": "UUID",
 				"fieldtype": "Data",
-				"insert_after": "svan_paperless_document_id",
+				"insert_after": "svan_paperless_version_id",
 				"hidden": 1,
 				"read_only": 1,
 				"no_copy": 1,
@@ -103,11 +121,49 @@ def get_custom_fields():
 				"default": "0",
 				"description": (
 					"SVAN Paperless NGX Bridge: "
-					"Set when tags, the correspondent or a mapped custom field changed "
-					"on the linked business document AFTER the initial sync (see "
-					'change_watch.py). Only ever set on files that are already "synced" '
-					"and processed by the scheduled job "
-					"paperless_sync.sync_metadata_updates()."
+					"Set when tags, the correspondent or a mapped custom field of the "
+					"business document, or the file name change after the upload (files in sync status "
+					'"syncing" or "synced"); cleared once the scheduled job has pushed '
+					"the metadata to Paperless NGX."
+				),
+			},
+			{
+				"fieldname": "svan_paperless_synced_name",
+				"label": "Synced File Name",
+				"fieldtype": "Data",
+				"insert_after": "svan_paperless_needs_update",
+				"hidden": 1,
+				"read_only": 1,
+				"no_copy": 1,
+				"description": (
+					"SVAN Paperless NGX Bridge: "
+					"File name last matched with Paperless NGX; empty until the first match."
+				),
+			},
+			{
+				"fieldname": "svan_paperless_synced_title",
+				"label": "Synced Title",
+				"fieldtype": "Data",
+				"insert_after": "svan_paperless_synced_name",
+				"hidden": 1,
+				"read_only": 1,
+				"no_copy": 1,
+				"description": (
+					"SVAN Paperless NGX Bridge: "
+					"Title of the Paperless NGX document at the last match (original only)."
+				),
+			},
+			{
+				"fieldname": "svan_paperless_synced_label",
+				"label": "Synced Version Label",
+				"fieldtype": "Data",
+				"insert_after": "svan_paperless_synced_title",
+				"hidden": 1,
+				"read_only": 1,
+				"no_copy": 1,
+				"description": (
+					"SVAN Paperless NGX Bridge: "
+					"Label of this file's version in Paperless NGX at the last match."
 				),
 			},
 		],
@@ -141,7 +197,11 @@ def create_svan_paperless_custom_fields():
 	Idempotent (create_custom_fields(..., update=True)) - safe both on a fresh
 	installation (after_install) and when run again on an existing site.
 	"""
-	create_custom_fields(get_custom_fields(), update=True)
+	custom_fields = get_custom_fields()
+	for fields in custom_fields.values():
+		for field in fields:
+			field["module"] = MODULE
+	create_custom_fields(custom_fields, update=True)
 	fix_user_field_order()
 
 

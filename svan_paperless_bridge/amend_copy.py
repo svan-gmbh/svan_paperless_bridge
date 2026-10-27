@@ -36,7 +36,7 @@ def prepare_amend_copy_for_upload(file_doc, settings, log):
 		frappe.db.get_value(
 			"File",
 			original_name,
-			["svan_paperless_document_id", "svan_paperless_sync_status"],
+			["svan_paperless_document_id", "svan_paperless_version_id", "svan_paperless_sync_status"],
 			as_dict=True,
 		)
 		if original_name
@@ -51,7 +51,10 @@ def prepare_amend_copy_for_upload(file_doc, settings, log):
 
 	try:
 		restore_physical_file_from_paperless(
-			file_doc, settings, document_id=original.svan_paperless_document_id
+			file_doc,
+			settings,
+			document_id=original.svan_paperless_document_id,
+			version_id=original.svan_paperless_version_id,
 		)
 	except requests.HTTPError as error:
 		if error.response is not None and error.response.status_code == 404:
@@ -64,6 +67,7 @@ def prepare_amend_copy_for_upload(file_doc, settings, log):
 	file_doc.db_set(
 		{
 			"svan_paperless_document_id": "",
+			"svan_paperless_version_id": "",
 			"svan_paperless_uuid": "",
 			"svan_paperless_sync_status": "pending",
 			# 0 is below any real sync_config_version, so the next classification run

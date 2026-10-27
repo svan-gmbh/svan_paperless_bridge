@@ -1,12 +1,16 @@
 # Copyright (c) 2026, SVAN GmbH
 # License: gpl-3.0
 
+import os
+import time
+
 import frappe
 
 from svan_paperless_bridge.paperless_sync import poll_syncing_files
 from svan_paperless_bridge.preview import is_preview_url
 from svan_paperless_bridge.tests.paperless_test_case import (
 	INVOICE_DOCTYPE,
+	SYNC_TIMEOUT_SECONDS,
 	PaperlessTestCase,
 	custom_field_values,
 	make_pdf,
@@ -82,6 +86,18 @@ class TestUpload(PaperlessTestCase):
 		correspondent = self.paperless.document(orphan_id)["correspondent"]
 		self.assertEqual(self.entity_name("correspondents", correspondent), self.name("Adopting Party"))
 
+	def test_document_of_pending_upload_is_not_adopted(self):
+		content = make_pdf()
+		first = self.attach_file(self.make_invoice(), content=content)
+		created_id = self._wait_for_task(first.reload().svan_paperless_uuid)
+
+		# The first file's poll has not run yet, so its document looks unclaimed.
+		second = self.synced_file(self.make_invoice(), file_name="copy.pdf", content=content)
+
+		self.assertNotEqual(int(second.svan_paperless_document_id), created_id)
+		self.assertEqual(self.wait_for_sync(first), "synced")
+		self.assertEqual(int(first.reload().svan_paperless_document_id), created_id)
+
 	def test_unreachable_paperless_keeps_file_pending(self):
 		with self.paperless_unreachable():
 			file_doc = self.attach_file(self.make_invoice())
@@ -122,7 +138,8 @@ class TestUpload(PaperlessTestCase):
 		self.synced_file(invoice)
 		self.paperless.delete("tags", self.paperless.find("tags", self.name("Archive"))["id"])
 
-		file_doc = self.synced_file(invoice)
+		# Another name: the same one would become a version, which sends no metadata.
+		file_doc = self.synced_file(invoice, file_name="second.pdf")
 
 		tag_names = [self.entity_name("tags", t) for t in self.document_of(file_doc)["tags"]]
 		self.assertIn(self.name("Archive"), tag_names)
@@ -134,6 +151,39 @@ class TestUpload(PaperlessTestCase):
 		file_doc = self.synced_file(self.make_invoice())
 
 		self.assertTrue(is_preview_url(file_doc.file_url))
+
+	def test_offloaded_file_keeps_its_content_hash_when_saved(self):
+		self.settings.delete_physical_file = 1
+		self.settings.save()
+		file_doc = self.synced_file(self.make_invoice())
+		content_hash = file_doc.reload().content_hash
+		self.assertTrue(content_hash)
+
+		file_doc.save()
+
+		self.assertEqual(file_doc.reload().content_hash, content_hash)
+
+	def test_offloading_removes_the_content_next_to_an_offloaded_file_of_the_same_content(self):
+		self.settings.delete_physical_file = 1
+		self.settings.save()
+		content = make_pdf()
+		self.synced_file(self.make_invoice(), content=content)
+		second = self.attach_file(self.make_invoice(), content=content)
+		path = second.get_full_path()
+		self.assertTrue(os.path.exists(path))
+
+		self.assertEqual(self.wait_for_sync(second), "synced")
+
+		self.assertFalse(os.path.exists(path))
+
+	def _wait_for_task(self, uuid):
+		deadline = time.monotonic() + SYNC_TIMEOUT_SECONDS
+		while time.monotonic() < deadline:
+			[task] = self.paperless.get("/tasks/", task_id=uuid)["results"]
+			if task["status"] == "success":
+				return task["related_document_ids"][0]
+			time.sleep(0.5)
+		self.fail(f"Upload task {uuid} did not finish")
 
 	def _map_reference_no(self):
 		frappe.get_doc(

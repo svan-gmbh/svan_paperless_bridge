@@ -4,10 +4,11 @@
 import frappe
 import requests
 
+from svan_paperless_bridge.file_versions import own_version_id
 from svan_paperless_bridge.preview import PREVIEW_METHOD_PATH, is_preview_url
 
 
-def restore_physical_file_from_paperless(file_doc, settings, document_id=None):
+def restore_physical_file_from_paperless(file_doc, settings, document_id=None, version_id=None):
 	"""Restore the local original content of ONE file whose physical content has
 	already been offloaded to Paperless NGX - the core of
 	restore_physical_files_from_paperless() (called there in a loop for every
@@ -15,8 +16,7 @@ def restore_physical_file_from_paperless(file_doc, settings, document_id=None):
 	actually deleting a Paperless NGX document (see the docstring there).
 
 	Downloads the ORIGINAL (not the archived PDF version - see
-	/documents/<id>/download/?original=true, the same "original" version that used
-	to be requested for Paperless share links) through the Paperless NGX API. The
+	/documents/<id>/download/?original=true) through the Paperless NGX API. The
 	content is stored in the local /private/files/ or /files/ folder through
 	Frappe's own File.save_file() mechanism - the same logic that applies to a
 	regular file upload (including the is_private-dependent target folder and
@@ -48,13 +48,18 @@ def restore_physical_file_from_paperless(file_doc, settings, document_id=None):
 	Raises on failure (network/HTTP/storage error) instead of logging or committing
 	itself - both are the caller's responsibility (see there).
 
-	document_id: the Paperless NGX document to download. Defaults to
-	file_doc.svan_paperless_document_id, which the caller has to check beforehand.
-	Explicit for a copied attachment (amend) that has no ID of its own yet.
+	document_id/version_id: the Paperless NGX document and its version to download
+	(without a version Paperless NGX serves the newest one). Default to the file's
+	own, which the caller has to check beforehand. Explicit for a copied attachment
+	(amend) that has no ID of its own yet.
 	"""
-	document_id = document_id or file_doc.svan_paperless_document_id
+	if not document_id:
+		document_id, version_id = file_doc.svan_paperless_document_id, own_version_id(file_doc)
 	token = settings.get_password("api_token", raise_exception=False)
-	url = settings.api_url.rstrip("/") + f"/documents/{document_id}/download/?original=true"
+	url = (
+		settings.api_url.rstrip("/")
+		+ f"/documents/{document_id}/download/?original=true&version={version_id or document_id}"
+	)
 
 	response = requests.get(
 		url,
@@ -142,9 +147,11 @@ def restore_physical_files_from_paperless():
 def reset_sync_state():
 	"""Reset the Paperless sync state (for testing/debugging).
 
-	Deletes all entries from "SVAN Paperless Sync Log" as well as all rows of the
-	two pure cache mapping DocTypes (tags, correspondents) and resets the sync
-	status, Paperless NGX UUID, the lazily resolved Paperless NGX document ID (see
+	Deletes all entries from "SVAN Paperless Sync Log" and "SVAN Paperless Import"
+	(clearing the import scan watermark, so the next import scan is a full one) as
+	well as all rows of the two pure cache mapping DocTypes (tags, correspondents)
+	and resets the sync status, Paperless NGX UUID, the lazily resolved Paperless
+	NGX document and version ID (see
 	paperless_sync.poll_syncing_files()) and the configuration stamp on all files
 	(except folders). The sync status is deliberately set to "" (empty) rather than
 	"pending": only the next scheduled run reclassifies via
@@ -195,6 +202,8 @@ def reset_sync_state():
 	frappe.db.delete("SVAN Paperless Sync Log")
 	frappe.db.delete("SVAN Paperless Tag Mapping")
 	frappe.db.delete("SVAN Paperless Correspondent Mapping")
+	frappe.db.delete("SVAN Paperless Import")
+	frappe.db.set_single_value("SVAN Paperless Settings", "import_scan_watermark", "")
 
 	frappe.db.sql(
 		"""
@@ -217,6 +226,10 @@ def reset_sync_state():
 		SET svan_paperless_sync_status = '',
 		    svan_paperless_uuid = '',
 		    svan_paperless_document_id = '',
+		    svan_paperless_version_id = '',
+		    svan_paperless_synced_name = '',
+		    svan_paperless_synced_title = '',
+		    svan_paperless_synced_label = '',
 		    svan_paperless_config_version_checked = 0
 		WHERE is_folder = 0
 		  AND NOT (

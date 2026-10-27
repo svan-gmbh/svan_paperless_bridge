@@ -7,7 +7,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: SVAN Paperless NGX Bridge VERSION\n"
 "Report-Msgid-Bugs-To: post@svan.gmbh\n"
-"POT-Creation-Date: 2026-10-05 16:49+0053\n"
+"POT-Creation-Date: 2026-10-27 15:55+0053\n"
 "PO-Revision-Date: 2026-09-29 15:44+0053\n"
 "Last-Translator: post@svan.gmbh\n"
 "Language: de\n"
@@ -18,22 +18,26 @@ msgstr ""
 "Content-Transfer-Encoding: 8bit\n"
 "Generated-By: Babel 2.16.0\n"
 
-#: svan_paperless_bridge/svan_paperless_ngx_bridge/doctype/svan_paperless_custom_field_source/svan_paperless_custom_field_source.py:27
+#: svan_paperless_bridge/svan_paperless_ngx_bridge/doctype/svan_paperless_custom_field_source/svan_paperless_custom_field_source.py:26
 msgid "\"File\" cannot be used as a source DocType."
 msgstr "\"File\" kann nicht als Quell-DocType gewählt werden."
 
-#: svan_paperless_bridge/svan_paperless_ngx_bridge/doctype/svan_paperless_settings/svan_paperless_settings.py:69
+#: svan_paperless_bridge/svan_paperless_ngx_bridge/doctype/svan_paperless_settings/svan_paperless_settings.py:127
 #, python-brace-format
 msgid "\"{0}\" is already listed in the DocType whitelist - each DocType may appear only once."
 msgstr "\"{0}\" ist bereits in der DocType-Whitelist erfasst - jeder DocType darf dort nur einmal vorkommen."
 
-#: svan_paperless_bridge/svan_paperless_ngx_bridge/doctype/svan_paperless_settings/svan_paperless_settings.py:93
+#: svan_paperless_bridge/svan_paperless_ngx_bridge/doctype/svan_paperless_settings/svan_paperless_settings.py:165
 msgid "'API Timeout (Seconds)' must be greater than 0."
 msgstr "'API-Timeout (Sekunden)' muss größer als 0 sein."
 
-#: svan_paperless_bridge/svan_paperless_ngx_bridge/doctype/svan_paperless_custom_field_mapping/svan_paperless_custom_field_mapping.py:84
+#: svan_paperless_bridge/svan_paperless_ngx_bridge/doctype/svan_paperless_custom_field_mapping/svan_paperless_custom_field_mapping.py:105
 msgid "'Bidirectional' was switched off - source field \"{0}\" on \"{1}\" is a link field and syncing back would otherwise have to rename or relink a foreign master record."
 msgstr "'Bidirektional' wurde ausgeschaltet - das Quell-Feld \"{0}\" an \"{1}\" ist ein Link-Feld, und eine Rückübertragung würde sonst einen fremden Stammdatensatz umbenennen oder umhängen müssen."
+
+#: svan_paperless_bridge/svan_paperless_ngx_bridge/doctype/svan_paperless_settings/svan_paperless_settings.py:28
+msgid "'Bidirectional' was switched off for the reference of the file import."
+msgstr "'Bidirektional' wurde für die Referenz des Dateiimports ausgeschaltet."
 
 #: svan_paperless_bridge/svan_paperless_ngx_bridge/doctype/svan_paperless_correspondent_mapping/svan_paperless_correspondent_mapping.py:52
 msgid "'Bidirectional' was switched off for {0} - the display name of this party type is recalculated from several fields on save and therefore cannot be written back."
@@ -44,7 +48,7 @@ msgstr "'Bidirektional' wurde für {0} ausgeschaltet - der Anzeigename dieses Pa
 msgid "'{0}' is not a valid field on '{1}'. For Party Fieldname, pick the technical fieldname from the suggestions (not the field label)."
 msgstr "'{0}' ist kein gültiges Feld an '{1}'. Bitte bei Partei-Feldname den technischen Feldnamen aus der Vorschlagsliste wählen (nicht das Feld-Label)."
 
-#: svan_paperless_bridge/svan_paperless_ngx_bridge/doctype/svan_paperless_custom_field_source/svan_paperless_custom_field_source.py:57
+#: svan_paperless_bridge/svan_paperless_ngx_bridge/doctype/svan_paperless_custom_field_source/svan_paperless_custom_field_source.py:55
 #, python-brace-format
 msgid "'{0}' is not a valid field on '{1}'. For Source Fieldname, use the technical fieldname (not the field label)."
 msgstr "'{0}' ist kein gültiges Feld an '{1}'. Bitte bei Quell-Feldname den technischen Feldnamen verwenden (nicht das Feld-Label)."
@@ -59,7 +63,7 @@ msgstr "'{0}' an '{1}' ist kein Link-Feld. Partei-Feldname muss ein Link auf den
 msgid "<span class=\"h4\"><b>Paperless NGX</b></span>"
 msgstr ""
 
-#: svan_paperless_bridge/svan_paperless_ngx_bridge/doctype/svan_paperless_custom_field_mapping/svan_paperless_custom_field_mapping.py:118
+#: svan_paperless_bridge/svan_paperless_ngx_bridge/doctype/svan_paperless_custom_field_mapping/svan_paperless_custom_field_mapping.py:147
 #, python-brace-format
 msgid "A mapping for Paperless custom field ID {0} already exists ({1})."
 msgstr "Es existiert bereits eine Zuordnung für die Paperless Zusatzfeld-ID {0} ({1})."
@@ -69,11 +73,11 @@ msgstr "Es existiert bereits eine Zuordnung für die Paperless Zusatzfeld-ID {0}
 msgid "A mapping for {0} {1} already exists ({2})."
 msgstr "Es existiert bereits eine Zuordnung für {0} {1} ({2})."
 
-#: svan_paperless_bridge/webhook_sync.py:104
+#: svan_paperless_bridge/webhook_sync.py:113
 msgid "A new webhook secret has been generated. Please update the \"Webhook-Secret\" header of the webhook action in Paperless NGX to this value manually."
 msgstr "Neues Webhook-Secret erzeugt. Bitte den Header \"Webhook-Secret\" der Webhook-Aktion in Paperless NGX manuell auf diesen Wert aktualisieren."
 
-#: svan_paperless_bridge/svan_paperless_ngx_bridge/doctype/svan_paperless_settings/svan_paperless_settings.js:204
+#: svan_paperless_bridge/svan_paperless_ngx_bridge/doctype/svan_paperless_settings/svan_paperless_settings.js:269
 msgid "A webhook secret is already configured. Generate a new one anyway?"
 msgstr "Es ist bereits ein Webhook-Secret hinterlegt. Trotzdem ein neues Secret erzeugen?"
 
@@ -85,15 +89,15 @@ msgstr "API-Timeout (Sekunden)"
 
 #. Custom field definition
 #. Label of the api_token (Password) field in DocType 'SVAN Paperless Settings'
-#: svan_paperless_bridge/custom_fields.py:124
+#: svan_paperless_bridge/custom_fields.py:180
 #: svan_paperless_bridge/svan_paperless_ngx_bridge/doctype/svan_paperless_settings/svan_paperless_settings.json
-#: svan_paperless_bridge/svan_paperless_ngx_bridge/doctype/svan_paperless_settings/svan_paperless_settings.py:320
+#: svan_paperless_bridge/svan_paperless_ngx_bridge/doctype/svan_paperless_settings/svan_paperless_settings.py:392
 msgid "API Token"
 msgstr ""
 
 #. Label of the api_url (Data) field in DocType 'SVAN Paperless Settings'
 #: svan_paperless_bridge/svan_paperless_ngx_bridge/doctype/svan_paperless_settings/svan_paperless_settings.json
-#: svan_paperless_bridge/svan_paperless_ngx_bridge/doctype/svan_paperless_settings/svan_paperless_settings.py:317
+#: svan_paperless_bridge/svan_paperless_ngx_bridge/doctype/svan_paperless_settings/svan_paperless_settings.py:389
 msgid "API URL"
 msgstr ""
 
@@ -115,7 +119,7 @@ msgstr "Bevor sich der automatische CronJob selbst kontrolliert beendet. Frappe 
 msgid "Allowed DocTypes"
 msgstr "Erlaubte DocTypes"
 
-#: svan_paperless_bridge/svan_paperless_ngx_bridge/doctype/svan_paperless_settings/svan_paperless_settings.py:329
+#: svan_paperless_bridge/svan_paperless_ngx_bridge/doctype/svan_paperless_settings/svan_paperless_settings.py:401
 msgid "Allowed DocTypes (whitelist)"
 msgstr "Erlaubte DocTypes (Whitelist)"
 
@@ -125,9 +129,19 @@ msgstr "Erlaubte DocTypes (Whitelist)"
 msgid "Allowed File Types"
 msgstr "Erlaubte Dateitypen"
 
-#: svan_paperless_bridge/svan_paperless_ngx_bridge/doctype/svan_paperless_settings/svan_paperless_settings.py:332
+#: svan_paperless_bridge/svan_paperless_ngx_bridge/doctype/svan_paperless_settings/svan_paperless_settings.py:404
 msgid "Allowed File Types (whitelist)"
 msgstr "Erlaubte Dateitypen (Whitelist)"
+
+#: svan_paperless_bridge/svan_paperless_ngx_bridge/doctype/svan_paperless_settings/svan_paperless_settings.py:141
+msgid "An import tag needs a reference for the import."
+msgstr "Ein Import-Schlagwort braucht eine Referenz für den Import."
+
+#. Label of the archive_deleted_files (Check) field in DocType 'SVAN Paperless
+#. Settings'
+#: svan_paperless_bridge/svan_paperless_ngx_bridge/doctype/svan_paperless_settings/svan_paperless_settings.json
+msgid "Archive Instead Of Deleting"
+msgstr "Archivieren statt löschen"
 
 #. Description of the 'Party' (Dynamic Link) field in DocType 'SVAN Paperless
 #. Correspondent Mapping'
@@ -150,7 +164,18 @@ msgstr "Solange gefüllt, wird das Feld von der Automatik nie wieder verändert.
 msgid "Assigned by the API."
 msgstr "Von der API vergeben."
 
-#: svan_paperless_bridge/custom_field_sync.py:84
+#. Label of the attempts (Int) field in DocType 'SVAN Paperless Import'
+#: svan_paperless_bridge/svan_paperless_ngx_bridge/doctype/svan_paperless_import/svan_paperless_import.json
+msgid "Attempts"
+msgstr "Versuche"
+
+#. Label of the max_import_attempts (Int) field in DocType 'SVAN Paperless
+#. Settings'
+#: svan_paperless_bridge/svan_paperless_ngx_bridge/doctype/svan_paperless_settings/svan_paperless_settings.json
+msgid "Attempts While No Business Document Is Found"
+msgstr "Versuche, solange kein Business-Dokument gefunden wird"
+
+#: svan_paperless_bridge/custom_field_sync.py:85
 #, python-brace-format
 msgid "Automatic creation is not supported for data type \"{0}\" (it requires additional configuration in Paperless NGX)."
 msgstr "Automatisches Anlegen wird für den Feldtyp \"{0}\" nicht unterstützt (benötigt zusätzliche Konfiguration in Paperless NGX)."
@@ -173,11 +198,23 @@ msgstr "Grundlagen"
 msgid "Bidirectional"
 msgstr "Bidirektional"
 
+#. Label of the business_doctype (Link) field in DocType 'SVAN Paperless
+#. Import'
+#: svan_paperless_bridge/svan_paperless_ngx_bridge/doctype/svan_paperless_import/svan_paperless_import.json
+msgid "Business DocType"
+msgstr "Business-DocType"
+
 #. Description of the 'Source Fields' (Table) field in DocType 'SVAN Paperless
 #. Custom Field Mapping'
 #: svan_paperless_bridge/svan_paperless_ngx_bridge/doctype/svan_paperless_custom_field_mapping/svan_paperless_custom_field_mapping.json
 msgid "Business DocType/fieldname pairs whose value is transferred as the value of this Paperless custom field when a file is uploaded. If no row exists for the DocType of the uploaded document, the custom field is simply omitted."
 msgstr "Business-DocType/Feldname-Paare, deren Wert beim Datei-Upload als Wert dieses Paperless-Zusatzfelds uebertragen wird. Ist fuer den DocType des hochzuladenden Dokuments keine Zeile hinterlegt, wird das Zusatzfeld beim Upload einfach weggelassen."
+
+#. Label of the business_name (Dynamic Link) field in DocType 'SVAN Paperless
+#. Import'
+#: svan_paperless_bridge/svan_paperless_ngx_bridge/doctype/svan_paperless_import/svan_paperless_import.json
+msgid "Business Document"
+msgstr "Business-Dokument"
 
 #. Description of the 'Source Fields (Count)' (Int) field in DocType 'SVAN
 #. Paperless Custom Field Mapping'
@@ -185,20 +222,36 @@ msgstr "Business-DocType/Feldname-Paare, deren Wert beim Datei-Upload als Wert d
 msgid "Calculated automatically from the source fields on save. Intended as a list column only and hidden in the form."
 msgstr "Wird beim Speichern automatisch aus den Quell-Feldern berechnet. Nur als Listenspalte gedacht, im Formular ausgeblendet."
 
-#: svan_paperless_bridge/svan_paperless_ngx_bridge/doctype/svan_paperless_settings/svan_paperless_settings.js:111
+#: svan_paperless_bridge/public/js/reference_change_confirm.js:27
+#: svan_paperless_bridge/svan_paperless_ngx_bridge/doctype/svan_paperless_settings/svan_paperless_settings.js:338
+msgid "Cancel"
+msgstr ""
+
+#: svan_paperless_bridge/svan_paperless_ngx_bridge/doctype/svan_paperless_settings/svan_paperless_settings.js:176
 msgid "Classification has been started in the background."
 msgstr "Klassifizierung wurde im Hintergrund gestartet."
 
-#: svan_paperless_bridge/svan_paperless_ngx_bridge/doctype/svan_paperless_settings/svan_paperless_settings.js:104
+#: svan_paperless_bridge/svan_paperless_ngx_bridge/doctype/svan_paperless_settings/svan_paperless_settings.js:169
 msgid "Classify Now"
 msgstr "Jetzt klassifizieren"
 
-#: svan_paperless_bridge/svan_paperless_ngx_bridge/doctype/svan_paperless_settings/svan_paperless_settings.py:224
+#: svan_paperless_bridge/svan_paperless_ngx_bridge/doctype/svan_paperless_settings/svan_paperless_settings.js:95
+msgid "Compare With Paperless NGX Now"
+msgstr "Jetzt mit Paperless NGX abgleichen"
+
+#: svan_paperless_bridge/svan_paperless_ngx_bridge/doctype/svan_paperless_settings/svan_paperless_settings.py:296
 #, python-brace-format
 msgid "Connection successful. Correspondent '{0}' found."
 msgstr "Verbindung erfolgreich. Korrespondent '{0}' gefunden."
 
-#: svan_paperless_bridge/svan_paperless_ngx_bridge/doctype/svan_paperless_settings/svan_paperless_settings.py:215
+#. Label of the context_section (Section Break) field in DocType 'SVAN
+#. Paperless Sync Log'
+#. Label of the context (JSON) field in DocType 'SVAN Paperless Sync Log'
+#: svan_paperless_bridge/svan_paperless_ngx_bridge/doctype/svan_paperless_sync_log/svan_paperless_sync_log.json
+msgid "Context"
+msgstr "Kontext"
+
+#: svan_paperless_bridge/svan_paperless_ngx_bridge/doctype/svan_paperless_settings/svan_paperless_settings.py:287
 #, python-brace-format
 msgid "Correspondent '{0}' was not found in Paperless NGX and has been created automatically (ID {1})."
 msgstr "Korrespondent '{0}' wurde in Paperless NGX nicht gefunden und automatisch angelegt (ID {1})."
@@ -206,11 +259,13 @@ msgstr "Korrespondent '{0}' wurde in Paperless NGX nicht gefunden und automatisc
 #. Label of the svan_default_correspondent_id (Data) field in DocType 'SVAN
 #. Paperless Settings'
 #: svan_paperless_bridge/svan_paperless_ngx_bridge/doctype/svan_paperless_settings/svan_paperless_settings.json
-#: svan_paperless_bridge/svan_paperless_ngx_bridge/doctype/svan_paperless_settings/svan_paperless_settings.py:326
+#: svan_paperless_bridge/svan_paperless_ngx_bridge/doctype/svan_paperless_settings/svan_paperless_settings.py:398
 msgid "Correspondent ID"
 msgstr "Korrespondent ID"
 
+#. Label of a Sidebar Item
 #. Label of a Workspace Sidebar Item
+#: svan_paperless_bridge/svan_paperless_ngx_bridge/sidebar/paperless_ngx/paperless_ngx.json
 #: svan_paperless_bridge/workspace_sidebar/paperless_ngx.json
 msgid "Correspondents"
 msgstr "Korrespondenten"
@@ -218,15 +273,16 @@ msgstr "Korrespondenten"
 #. Description of the 'Feedback From Paperless NGX (Webhook)' (Section Break)
 #. field in DocType 'SVAN Paperless Settings'
 #: svan_paperless_bridge/svan_paperless_ngx_bridge/doctype/svan_paperless_settings/svan_paperless_settings.json
-#, python-brace-format
-msgid "Create the workflow for this manually in Paperless NGX:<ul><li><b>Trigger type</b>: \"Document Updated\"</li><li><b>Action type</b>: \"Webhook\"</li><li><b>Webhook URL</b> (example): <code>https://erp.example.com/api/method/svan_paperless_bridge.webhook_sync.receive_update</code></li><li><b>Use parameters for webhook body</b>: NOT set</li><li><b>Send webhook payload as JSON</b>: set</li><li><b>Webhook body</b>: <code>{\"document_id\": {{ doc_id }}}</code></li><li><b>Webhook header</b>: <code>Webhook-Secret</code> = the value from the \"Webhook Secret\" field below</li></ul>"
-msgstr "Workflow dafür manuell in Paperless NGX anlegen:<ul><li><b>Auslösertyp</b>: \"Dokument aktualisiert\"</li><li><b>Aktionstyp</b>: \"Webhook\"</li><li><b>Webhook-URL</b> (Beispiel): <code>https://erp.example.com/api/method/svan_paperless_bridge.webhook_sync.receive_update</code></li><li><b>Parameter für Webhook-Inhalt verwenden</b>: NICHT gesetzt</li><li><b>Webhook-Payload als JSON senden</b>: gesetzt</li><li><b>Webhook-Inhalt</b>: <code>{\"document_id\": {{ doc_id }}}</code></li><li><b>Webhook-Kopfzeile</b>: <code>Webhook-Secret</code> = der Wert aus dem Feld \"Webhook-Secret\" unten</li></ul>"
+msgid "Create the workflow for this manually in Paperless NGX:<ul><li><b>Trigger type</b>: \"Document Updated\"</li><li><b>Action type</b>: \"Webhook\"</li><li><b>Webhook URL</b> (example): <code>https://erp.example.com/api/method/svan_paperless_bridge.webhook_sync.receive_update</code></li><li><b>Use parameters for webhook body</b>: NOT set</li><li><b>Send webhook payload as JSON</b>: NOT set</li><li><b>Webhook body</b>: <code>{\"document_id\": {{ doc_id }}}</code></li><li><b>Webhook headers</b>: <code>Webhook-Secret</code> = the value from the \"Webhook Secret\" field below, and <code>Content-Type</code> = <code>application/json</code></li><li><b>Include document</b>: NOT set</li></ul>"
+msgstr "Workflow dafür manuell in Paperless NGX anlegen:<ul><li><b>Auslösertyp</b>: \"Dokument aktualisiert\"</li><li><b>Aktionstyp</b>: \"Webhook\"</li><li><b>Webhook-URL</b> (Beispiel): <code>https://erp.example.com/api/method/svan_paperless_bridge.webhook_sync.receive_update</code></li><li><b>Parameter für Webhook-Inhalt verwenden</b>: NICHT gesetzt</li><li><b>Webhook-Payload als JSON senden</b>: NICHT gesetzt</li><li><b>Webhook-Inhalt</b>: <code>{\"document_id\": {{ doc_id }}}</code></li><li><b>Webhook-Kopfzeilen</b>: <code>Webhook-Secret</code> = der Wert aus dem Feld \"Webhook-Secret\" unten, und <code>Content-Type</code> = <code>application/json</code></li><li><b>Dokument einbeziehen</b>: NICHT gesetzt</li></ul>"
 
 #: svan_paperless_bridge/public/js/svan_paperless_custom_field_mapping_list.js:9
 msgid "Created in Paperless"
 msgstr "In Paperless angelegt"
 
+#. Label of a Sidebar Item
 #. Label of a Workspace Sidebar Item
+#: svan_paperless_bridge/svan_paperless_ngx_bridge/sidebar/paperless_ngx/paperless_ngx.json
 #: svan_paperless_bridge/workspace_sidebar/paperless_ngx.json
 msgid "Custom Fields"
 msgstr "Zusatzfelder"
@@ -252,30 +308,38 @@ msgstr "Datum/Zeit"
 #. Label of the default_correspondent (Data) field in DocType 'SVAN Paperless
 #. Settings'
 #: svan_paperless_bridge/svan_paperless_ngx_bridge/doctype/svan_paperless_settings/svan_paperless_settings.json
-#: svan_paperless_bridge/svan_paperless_ngx_bridge/doctype/svan_paperless_settings/svan_paperless_settings.py:323
+#: svan_paperless_bridge/svan_paperless_ngx_bridge/doctype/svan_paperless_settings/svan_paperless_settings.py:395
 msgid "Default Correspondent"
 msgstr "Standard-Korrespondent"
 
-#. Label of the delete_physical_file (Check) field in DocType 'SVAN Paperless
-#. Settings'
-#: svan_paperless_bridge/svan_paperless_ngx_bridge/doctype/svan_paperless_settings/svan_paperless_settings.json
-msgid "Delete Physical File After Transfer"
-msgstr "Physische Datei nach Übertragung löschen"
-
-#: svan_paperless_bridge/svan_paperless_ngx_bridge/doctype/svan_paperless_settings/svan_paperless_settings.js:138
+#: svan_paperless_bridge/svan_paperless_ngx_bridge/doctype/svan_paperless_settings/svan_paperless_settings.js:203
 msgid "Delete Physical Files Retroactively"
 msgstr "Physische Dateien rückwirkend löschen"
 
-#: svan_paperless_bridge/svan_paperless_ngx_bridge/doctype/svan_paperless_settings/svan_paperless_settings.js:128
+#. Label of the archive_section (Section Break) field in DocType 'SVAN
+#. Paperless Settings'
+#: svan_paperless_bridge/svan_paperless_ngx_bridge/doctype/svan_paperless_settings/svan_paperless_settings.json
+msgid "Deleting Files"
+msgstr "Löschen von Dateien"
+
+#. Description of the 'Archive Instead Of Deleting' (Check) field in DocType
+#. 'SVAN Paperless Settings'
+#: svan_paperless_bridge/svan_paperless_ngx_bridge/doctype/svan_paperless_settings/svan_paperless_settings.json
+msgid "Deleting a file in ERPNext never deletes anything in Paperless NGX. Instead \" (archived)\" is added to the version label of the file there, and to the title of the document once its last file is deleted. Paperless NGX documents and versions marked so are not imported again. Without this option, deleting a file deletes its document or version in Paperless NGX as well."
+msgstr "Das Löschen einer Datei in ERPNext löscht in Paperless NGX nie etwas. Stattdessen wird dort an das Versions-Label der Datei \" (archived)\" angehängt, und an den Titel des Dokuments, sobald seine letzte Datei gelöscht wird. So markierte Paperless-NGX-Dokumente und -Versionen werden nicht erneut importiert. Ohne diese Option löscht das Löschen einer Datei auch ihr Dokument bzw. ihre Version in Paperless NGX."
+
+#: svan_paperless_bridge/svan_paperless_ngx_bridge/doctype/svan_paperless_settings/svan_paperless_settings.js:193
 msgid "Deletion has been started in the background."
 msgstr "Löschen wurde im Hintergrund gestartet."
 
-#: svan_paperless_bridge/paperless_delete.py:380
+#: svan_paperless_bridge/paperless_delete.py:553
 #, python-brace-format
 msgid "Deletion in Paperless NGX failed (HTTP {0}) - deletion is blocked for now."
 msgstr "Löschen in Paperless NGX fehlgeschlagen (HTTP {0}) - Löschen wird vorerst verhindert."
 
+#. Label of the details (Small Text) field in DocType 'SVAN Paperless Import'
 #. Label of the details (Code) field in DocType 'SVAN Paperless Sync Log'
+#: svan_paperless_bridge/svan_paperless_ngx_bridge/doctype/svan_paperless_import/svan_paperless_import.json
 #: svan_paperless_bridge/svan_paperless_ngx_bridge/doctype/svan_paperless_sync_log/svan_paperless_sync_log.json
 msgid "Details"
 msgstr ""
@@ -299,11 +363,11 @@ msgid "DocType Whitelist"
 msgstr "DocType-Whitelist"
 
 #. Custom field definition
-#: svan_paperless_bridge/custom_fields.py:22
+#: svan_paperless_bridge/custom_fields.py:24
 msgid "Document ID"
 msgstr "Dokumenten-ID"
 
-#: svan_paperless_bridge/public/js/file.js:96
+#: svan_paperless_bridge/public/js/file.js:98
 msgid "Download"
 msgstr ""
 
@@ -358,14 +422,22 @@ msgstr "Paperless NGX Dokumentenberechtigungen bei Vorschau prüfen"
 msgid "Error"
 msgstr ""
 
-#: svan_paperless_bridge/svan_paperless_ngx_bridge/doctype/svan_paperless_settings/svan_paperless_settings.py:200
+#: svan_paperless_bridge/svan_paperless_ngx_bridge/doctype/svan_paperless_settings/svan_paperless_settings.py:272
 msgid "Error: no API token configured."
 msgstr "Fehler: Kein API-Token hinterlegt."
 
-#: svan_paperless_bridge/svan_paperless_ngx_bridge/doctype/svan_paperless_settings/svan_paperless_settings.py:234
+#: svan_paperless_bridge/svan_paperless_ngx_bridge/doctype/svan_paperless_settings/svan_paperless_settings.py:306
 #, python-brace-format
 msgid "Error: {0} - {1}"
 msgstr "Fehler: {0} - {1}"
+
+#: svan_paperless_bridge/public/js/svan_paperless_sync_log_list.js:7
+msgid "Export as JSON"
+msgstr "Als JSON exportieren"
+
+#: svan_paperless_bridge/public/js/svan_marker_tooltip.js:17
+msgid "Extension from {0}"
+msgstr "Erweiterung aus {0}"
 
 #. Label of the webhook_section (Section Break) field in DocType 'SVAN
 #. Paperless Settings'
@@ -373,13 +445,19 @@ msgstr "Fehler: {0} - {1}"
 msgid "Feedback From Paperless NGX (Webhook)"
 msgstr "Rückmeldung von Paperless NGX (Webhook)"
 
+#. Label of the file (Link) field in DocType 'SVAN Paperless Import'
 #. Label of the reference_file (Link) field in DocType 'SVAN Paperless Sync
 #. Log'
+#: svan_paperless_bridge/svan_paperless_ngx_bridge/doctype/svan_paperless_import/svan_paperless_import.json
 #: svan_paperless_bridge/svan_paperless_ngx_bridge/doctype/svan_paperless_sync_log/svan_paperless_sync_log.json
 msgid "File"
 msgstr "Datei"
 
-#: svan_paperless_bridge/paperless_delete.py:80
+#: svan_paperless_bridge/paperless_delete.py:227
+msgid "File '{0}' could not be marked as archived in Paperless NGX - deletion is blocked for now."
+msgstr "Datei '{0}' konnte in Paperless NGX nicht als archiviert markiert werden - das Löschen ist vorerst blockiert."
+
+#: svan_paperless_bridge/paperless_delete.py:134
 #, python-brace-format
 msgid "File '{0}' is currently being synced to Paperless NGX - it can only be deleted once the sync has finished. Please try again shortly."
 msgstr "Die Datei '{0}' wird gerade mit Paperless NGX synchronisiert - Löschen ist erst nach Abschluss der Synchronisierung möglich. Bitte in Kürze erneut versuchen."
@@ -390,10 +468,18 @@ msgstr "Die Datei '{0}' wird gerade mit Paperless NGX synchronisiert - Löschen 
 msgid "File Extension"
 msgstr "Dateiendung"
 
+#. Label of the import_section (Section Break) field in DocType 'SVAN Paperless
+#. Settings'
+#: svan_paperless_bridge/svan_paperless_ngx_bridge/doctype/svan_paperless_settings/svan_paperless_settings.json
+msgid "File Import From Paperless NGX"
+msgstr "Dateiimport aus Paperless NGX"
+
 #. Label of the file_type (Link) field in DocType 'SVAN Paperless Whitelisted
 #. File Type'
+#. Label of a Sidebar Item
 #. Label of a Workspace Sidebar Item
 #: svan_paperless_bridge/svan_paperless_ngx_bridge/doctype/svan_paperless_whitelisted_file_type/svan_paperless_whitelisted_file_type.json
+#: svan_paperless_bridge/svan_paperless_ngx_bridge/sidebar/paperless_ngx/paperless_ngx.json
 #: svan_paperless_bridge/workspace_sidebar/paperless_ngx.json
 msgid "File Type"
 msgstr "Dateityp"
@@ -403,6 +489,12 @@ msgstr "Dateityp"
 #: svan_paperless_bridge/svan_paperless_ngx_bridge/doctype/svan_paperless_settings/svan_paperless_settings.json
 msgid "File Type Whitelist"
 msgstr "Dateityp-Whitelist"
+
+#. Description of the 'File Import From Paperless NGX' (Section Break) field in
+#. DocType 'SVAN Paperless Settings'
+#: svan_paperless_bridge/svan_paperless_ngx_bridge/doctype/svan_paperless_settings/svan_paperless_settings.json
+msgid "Files created in Paperless NGX with a whitelisted document type and a value in the reference are attached to the matching business document. A later change of the document type or reference in Paperless NGX moves the file to the matching business document, or removes it from ERPNext if none matches. Checked on every update reported by the webhook and once a day."
+msgstr "In Paperless NGX angelegte Dateien mit einem Dokumenttyp aus der Whitelist und einem Wert in der Referenz werden an das passende Business-Dokument angehängt. Eine spätere Änderung von Dokumenttyp oder Referenz in Paperless NGX hängt die Datei an das passende Business-Dokument um oder entfernt sie aus ERPNext, wenn keines passt. Geprüft wird bei jeder vom Webhook gemeldeten Änderung und einmal täglich."
 
 #. Description of the 'Correspondent ID' (Data) field in DocType 'SVAN
 #. Paperless Settings'
@@ -416,15 +508,15 @@ msgstr "Wird beim Speichern automatisch anhand des gefundenen Korrespondenten be
 msgid "Filled automatically on the first file upload for this DocType, as soon as the corresponding document type has been found or created."
 msgstr "Wird automatisch beim ersten Datei-Upload dieses DocTypes befüllt, sobald der zugehörige Dokumententyp gefunden oder angelegt wurde."
 
-#: svan_paperless_bridge/svan_paperless_ngx_bridge/doctype/svan_paperless_settings/svan_paperless_settings.js:40
+#: svan_paperless_bridge/svan_paperless_ngx_bridge/doctype/svan_paperless_settings/svan_paperless_settings.js:51
 msgid "Finalization has been started in the background."
 msgstr "Abschluss wurde im Hintergrund gestartet."
 
-#: svan_paperless_bridge/svan_paperless_ngx_bridge/doctype/svan_paperless_settings/svan_paperless_settings.js:33
+#: svan_paperless_bridge/svan_paperless_ngx_bridge/doctype/svan_paperless_settings/svan_paperless_settings.js:44
 msgid "Finalize Pending Transfers"
 msgstr "Ausstehende Übertragungen abschließen"
 
-#: svan_paperless_bridge/svan_paperless_ngx_bridge/doctype/svan_paperless_settings/svan_paperless_settings.js:121
+#: svan_paperless_bridge/svan_paperless_ngx_bridge/doctype/svan_paperless_settings/svan_paperless_settings.js:186
 msgid "Finalize Stuck Deletions"
 msgstr "Hängengebliebene Löschungen abschließen"
 
@@ -439,9 +531,29 @@ msgstr "Für einen einzelnen Upload-Aufruf."
 msgid "Frappe Tag"
 msgstr "Frappe-Schlagwort"
 
-#: svan_paperless_bridge/svan_paperless_ngx_bridge/doctype/svan_paperless_settings/svan_paperless_settings.js:184
+#: svan_paperless_bridge/svan_paperless_ngx_bridge/doctype/svan_paperless_settings/svan_paperless_settings.js:329
+msgid "From now on, deleting a file also deletes it in Paperless NGX. Archived documents come back when they are changed in Paperless NGX and qualify for the import."
+msgstr "Ab jetzt löscht das Löschen einer Datei sie auch in Paperless NGX. Archivierte Dokumente kommen zurück, wenn sie in Paperless NGX geändert werden und für den Import infrage kommen."
+
+#: svan_paperless_bridge/svan_paperless_ngx_bridge/doctype/svan_paperless_settings/svan_paperless_settings.js:249
 msgid "Generate Secret"
 msgstr "Secret erzeugen"
+
+#. Description of the 'Import Scan Watermark' (Data) field in DocType 'SVAN
+#. Paperless Settings'
+#: svan_paperless_bridge/svan_paperless_ngx_bridge/doctype/svan_paperless_settings/svan_paperless_settings.json
+msgid "Highest \"modified\" timestamp of Paperless NGX seen by the last import scan; the next scan only looks at files changed after it. Empty: full scan."
+msgstr "Höchster \"modified\"-Zeitstempel aus Paperless NGX beim letzten Import-Scan; der nächste Scan betrachtet nur danach geänderte Dateien. Leer: vollständiger Scan."
+
+#. Description of the 'Attempts While No Business Document Is Found' (Int)
+#. field in DocType 'SVAN Paperless Settings'
+#: svan_paperless_bridge/svan_paperless_ngx_bridge/doctype/svan_paperless_settings/svan_paperless_settings.json
+msgid "How often a file is retried (once per import run) while no business document matches its reference. A later change of the file in Paperless NGX starts the attempts over."
+msgstr "Wie oft eine Datei erneut versucht wird (einmal je Importlauf), solange kein Business-Dokument zu ihrer Referenz passt. Eine spätere Änderung der Datei in Paperless NGX startet die Versuche neu."
+
+#: svan_paperless_bridge/utils/field_options.py:36
+msgid "ID"
+msgstr ""
 
 #. Description of the 'Bidirectional' (Check) field in DocType 'SVAN Paperless
 #. Correspondent Mapping'
@@ -452,14 +564,29 @@ msgstr "Wird dieser Korrespondent in Paperless NGX umbenannt, ersetzt oder entfe
 #. Description of the 'Bidirectional' (Check) field in DocType 'SVAN Paperless
 #. Custom Field Mapping'
 #: svan_paperless_bridge/svan_paperless_ngx_bridge/doctype/svan_paperless_custom_field_mapping/svan_paperless_custom_field_mapping.json
-msgid "If this custom field value is changed directly in Paperless NGX (webhook), the change is only applied to ALL source fields listed below when this option is enabled. Switched off automatically on save if one of the source fields is a link field. Syncing from ERPNext to Paperless NGX is independent of this option and always runs."
-msgstr "Bei einer Änderung dieses Zusatzfeld-Werts direkt in Paperless NGX (Webhook) wird sie nur bei aktivierter Option auf ALLE unten hinterlegten Quell-Felder nach ERPNext übernommen. Wird beim Speichern automatisch ausgeschaltet, wenn eines der Quell-Felder ein Link-Feld ist. Die Synchronisation von ERPNext nach Paperless NGX ist davon unabhängig und läuft immer."
+msgid "If this custom field value is changed directly in Paperless NGX (webhook), the change is only applied to ALL source fields listed below when this option is enabled. Switched off automatically on save if one of the source fields is a link field, and locked while the mapping is the reference of the file import. Syncing from ERPNext to Paperless NGX is independent of this option and always runs."
+msgstr "Bei einer Änderung dieses Zusatzfeld-Werts direkt in Paperless NGX (Webhook) wird sie nur bei aktivierter Option auf ALLE unten hinterlegten Quell-Felder nach ERPNext übernommen. Wird beim Speichern automatisch ausgeschaltet, wenn eines der Quell-Felder ein Link-Feld ist, und ist gesperrt, solange das Mapping die Referenz des Dateiimports ist. Die Synchronisation von ERPNext nach Paperless NGX ist davon unabhängig und läuft immer."
 
 #. Description of the 'Bidirectional' (Check) field in DocType 'SVAN Paperless
 #. Tag Mapping'
 #: svan_paperless_bridge/svan_paperless_ngx_bridge/doctype/svan_paperless_tag_mapping/svan_paperless_tag_mapping.json
 msgid "If this tag is changed directly in Paperless NGX (webhook), the change is only applied to ERPNext when this option is enabled. Syncing from ERPNext to Paperless NGX is independent of this option and always runs."
 msgstr "Bei einer Änderung dieses Schlagworts direkt in Paperless NGX (Webhook) wird sie nur bei aktivierter Option nach ERPNext übernommen. Die Synchronisation von ERPNext nach Paperless NGX ist davon unabhängig und läuft immer."
+
+#: svan_paperless_bridge/svan_paperless_ngx_bridge/doctype/svan_paperless_settings/svan_paperless_settings.js:112
+msgid "Import From Paperless NGX Now"
+msgstr "Jetzt aus Paperless NGX importieren"
+
+#. Label of the import_scan_watermark (Data) field in DocType 'SVAN Paperless
+#. Settings'
+#: svan_paperless_bridge/svan_paperless_ngx_bridge/doctype/svan_paperless_settings/svan_paperless_settings.json
+msgid "Import Scan Watermark"
+msgstr "Wasserstand des Import-Scans"
+
+#. Label of the import_tag (Link) field in DocType 'SVAN Paperless Settings'
+#: svan_paperless_bridge/svan_paperless_ngx_bridge/doctype/svan_paperless_settings/svan_paperless_settings.json
+msgid "Import Tag"
+msgstr "Import-Schlagwort"
 
 #. Option for the 'Log Type' (Select) field in DocType 'SVAN Paperless Sync
 #. Log'
@@ -473,9 +600,21 @@ msgstr ""
 msgid "Internal counter, incremented automatically whenever the whitelist changes. Determines which files the scheduled job re-evaluates for sync relevance on its next run."
 msgstr "Interner Zähler: wird automatisch erhöht, sobald sich die Whitelist inhaltlich ändert. Steuert, welche Dateien der CronJob beim nächsten Lauf neu auf Sync-Relevanz prüft."
 
-#: svan_paperless_bridge/webhook_sync.py:162
+#: svan_paperless_bridge/webhook_sync.py:171
 msgid "Invalid webhook secret."
 msgstr "Ungültiges Webhook-Secret."
+
+#. Label of the delete_physical_file (Check) field in DocType 'SVAN Paperless
+#. Settings'
+#: svan_paperless_bridge/svan_paperless_ngx_bridge/doctype/svan_paperless_settings/svan_paperless_settings.json
+msgid "Keep File Content Only In Paperless NGX"
+msgstr "Dateiinhalt nur in Paperless NGX vorhalten"
+
+#. Label of the last_attempt (Datetime) field in DocType 'SVAN Paperless
+#. Import'
+#: svan_paperless_bridge/svan_paperless_ngx_bridge/doctype/svan_paperless_import/svan_paperless_import.json
+msgid "Last Attempt"
+msgstr "Letzter Versuch"
 
 #. Label of the last_synced (Datetime) field in DocType 'SVAN Paperless
 #. Correspondent Mapping'
@@ -510,15 +649,18 @@ msgstr "MIME-Type"
 msgid "MUST belong to an unrestricted (superuser) account - this is checked on save. For files it is not allowed to see, a restricted token would report \"no longer exists\" instead of \"no permission\" and thereby allow a deletion in ERPNext that should have been blocked."
 msgstr "MUSS einem uneingeschränkten (Superuser-)Konto gehören - wird beim Speichern geprüft. Ein eingeschränkter Token würde bei Dateien, die er nicht sehen darf, fälschlich \"existiert nicht mehr\" statt \"keine Berechtigung\" melden und so ein eigentlich verhindertes Löschen in ERPNext versehentlich zulassen."
 
-#: svan_paperless_bridge/svan_paperless_ngx_bridge/doctype/svan_paperless_settings/svan_paperless_settings.js:100
-#: svan_paperless_bridge/svan_paperless_ngx_bridge/doctype/svan_paperless_settings/svan_paperless_settings.js:117
-#: svan_paperless_bridge/svan_paperless_ngx_bridge/doctype/svan_paperless_settings/svan_paperless_settings.js:134
-#: svan_paperless_bridge/svan_paperless_ngx_bridge/doctype/svan_paperless_settings/svan_paperless_settings.js:160
+#: svan_paperless_bridge/svan_paperless_ngx_bridge/doctype/svan_paperless_settings/svan_paperless_settings.js:145
+#: svan_paperless_bridge/svan_paperless_ngx_bridge/doctype/svan_paperless_settings/svan_paperless_settings.js:165
+#: svan_paperless_bridge/svan_paperless_ngx_bridge/doctype/svan_paperless_settings/svan_paperless_settings.js:182
+#: svan_paperless_bridge/svan_paperless_ngx_bridge/doctype/svan_paperless_settings/svan_paperless_settings.js:199
+#: svan_paperless_bridge/svan_paperless_ngx_bridge/doctype/svan_paperless_settings/svan_paperless_settings.js:225
 msgid "Maintenance"
 msgstr "Wartung"
 
+#. Label of a Sidebar Item
 #. Label of a Card Break in the Paperless NGX Workspace
 #. Label of a Workspace Sidebar Item
+#: svan_paperless_bridge/svan_paperless_ngx_bridge/sidebar/paperless_ngx/paperless_ngx.json
 #: svan_paperless_bridge/svan_paperless_ngx_bridge/workspace/paperless_ngx/paperless_ngx.json
 #: svan_paperless_bridge/workspace_sidebar/paperless_ngx.json
 msgid "Mapping"
@@ -537,14 +679,9 @@ msgid "Maximum Runtime (Seconds)"
 msgstr "Maximale Laufzeit (Sekunden)"
 
 #. Custom field definition
-#: svan_paperless_bridge/custom_fields.py:97
+#: svan_paperless_bridge/custom_fields.py:115
 msgid "Metadata Update Pending"
 msgstr "Metadaten-Update ausstehend"
-
-#: svan_paperless_bridge/svan_paperless_ngx_bridge/doctype/svan_paperless_settings/svan_paperless_settings.py:341
-#, python-brace-format
-msgid "Missing fields: {0}"
-msgstr "Fehlende Felder: {0}"
 
 #. Description of the 'Default Correspondent' (Data) field in DocType 'SVAN
 #. Paperless Settings'
@@ -552,24 +689,28 @@ msgstr "Fehlende Felder: {0}"
 msgid "Name, matched case-insensitively."
 msgstr "Name, wird case-insensitive abgeglichen."
 
-#: svan_paperless_bridge/svan_paperless_ngx_bridge/doctype/svan_paperless_settings/svan_paperless_settings.js:94
+#: svan_paperless_bridge/svan_paperless_ngx_bridge/doctype/svan_paperless_settings/svan_paperless_settings.js:159
 msgid "No files with status 'broken' found."
 msgstr "Keine Dateien mit Status 'broken' gefunden."
 
-#: svan_paperless_bridge/paperless_delete.py:248
+#: svan_paperless_bridge/paperless_delete.py:417
 #, python-brace-format
 msgid "No personal Paperless NGX API token configured - deletion of file '{0}' cannot be verified and is therefore blocked."
 msgstr "Kein persönliches Paperless NGX API-Token hinterlegt - Löschen der Datei '{0}' ist damit nicht überprüfbar und wird verhindert."
+
+#: svan_paperless_bridge/svan_paperless_ngx_bridge/doctype/svan_paperless_settings/svan_paperless_settings.js:139
+msgid "No stopped imports found."
+msgstr "Keine gestoppten Importe gefunden."
 
 #: svan_paperless_bridge/public/js/svan_paperless_custom_field_mapping_list.js:11
 msgid "Not created yet"
 msgstr "Noch nicht angelegt"
 
-#. Description of the 'Delete Physical File After Transfer' (Check) field in
-#. DocType 'SVAN Paperless Settings'
+#. Description of the 'Keep File Content Only In Paperless NGX' (Check) field
+#. in DocType 'SVAN Paperless Settings'
 #: svan_paperless_bridge/svan_paperless_ngx_bridge/doctype/svan_paperless_settings/svan_paperless_settings.json
-msgid "Once the transfer has finished, deletes the physical file and points the file URL at an internal preview route that fetches the content server-side on demand. The File document itself is kept; only the local file content is removed."
-msgstr "Löscht nach abgeschlossener Übertragung die physische Datei und stellt das Datei-URL-Feld auf eine interne Vorschau-Route um, die den Inhalt bei Bedarf serverseitig nachlädt - das File-Dokument selbst bleibt erhalten, nur der lokale Dateiinhalt verschwindet."
+msgid "Once a file has been transferred, deletes its local content and points the file URL at an internal preview route that fetches the content from Paperless NGX on demand. Applies to files imported from Paperless NGX as well: without this option their content is downloaded. The File document itself is always kept."
+msgstr "Löscht nach der Übertragung einer Datei ihren lokalen Inhalt und lässt die Datei-URL auf eine interne Vorschau-Route zeigen, die den Inhalt bei Bedarf aus Paperless NGX holt. Gilt auch für aus Paperless NGX importierte Dateien: Ohne diese Option wird ihr Inhalt heruntergeladen. Das File-Dokument selbst bleibt immer erhalten."
 
 #. Description of the 'Allowed DocTypes' (Table) field in DocType 'SVAN
 #. Paperless Settings'
@@ -589,11 +730,27 @@ msgstr "Nur Dateien mit einer hier gelisteten Endung oder MIME-Type werden synch
 msgid "Optional, e.g. \"application/x-msdownload\"."
 msgstr "Optional, z. B. \"application/x-msdownload\"."
 
+#. Description of the 'Import Tag' (Link) field in DocType 'SVAN Paperless
+#. Settings'
+#: svan_paperless_bridge/svan_paperless_ngx_bridge/doctype/svan_paperless_settings/svan_paperless_settings.json
+msgid "Optional. Only files carrying this tag in Paperless NGX are imported. It is not added to the business document, so it disappears from the file after the import."
+msgstr "Optional. Importiert werden nur Dateien, die in Paperless NGX dieses Schlagwort tragen. Es wird nicht ans Business-Dokument übernommen und verschwindet deshalb nach dem Import von der Datei."
+
+#. Description of the 'Reference For Import' (Link) field in DocType 'SVAN
+#. Paperless Settings'
+#: svan_paperless_bridge/svan_paperless_ngx_bridge/doctype/svan_paperless_settings/svan_paperless_settings.json
+msgid "Optional. The custom field mapping whose value identifies the business document of a file created in Paperless NGX (e.g. the source \"ID (name)\"). Files are imported for every whitelisted DocType this mapping has a source on. The value is never written back from Paperless NGX, so the mapping stays without \"Bidirectional\"."
+msgstr "Optional. Das Zusatzfeld-Mapping, dessen Wert das Business-Dokument einer in Paperless NGX angelegten Datei bestimmt (z. B. die Quelle \"ID (name)\"). Importiert wird für jeden Whitelist-DocType, für den das Mapping eine Quelle hat. Der Wert wird nie aus Paperless NGX zurückgeschrieben, das Mapping bleibt daher ohne \"Bidirektional\"."
+
 #. Description of the 'Party Fieldname' (Autocomplete) field in DocType 'SVAN
 #. Paperless Whitelisted DocType'
 #: svan_paperless_bridge/svan_paperless_ngx_bridge/doctype/svan_paperless_whitelisted_doctype/svan_paperless_whitelisted_doctype.json
 msgid "Optional. The link field holding the party that becomes the correspondent. Examples: \"customer\" on \"Sales Order\"; \"party_name\" on \"Quotation\" (a dynamic link: whether it is a Customer, Lead, ... comes from \"quotation_to\"). The party is the linked master record and its title field is transferred as the correspondent name. The input only suggests matching link fields. Used to resolve a document-specific correspondent via the correspondent mapping instead of the global default. Leave empty if this DocType has no suitable party."
 msgstr "Optional. Das Link-Feld mit der Partei, die zum Korrespondenten wird. Beispiele: \"customer\" an \"Sales Order\"; \"party_name\" an \"Quotation\" (ein dynamischer Link: ob es ein Customer, Lead, ... ist, ergibt sich aus \"quotation_to\"). Die Partei ist der verlinkte Stammdatensatz, als Korrespondenten-Name wird dessen Titel-Feld übertragen. Die Eingabe schlägt beim Tippen nur passende Link-Felder vor. Wird genutzt, um über das Mapping der Korrespondenten einen dokumentspezifischen statt des globalen Standard-Korrespondenten zu ermitteln. Leer lassen, wenn dieser DocType keine passende Partei hat."
+
+#: svan_paperless_bridge/paperless_delete.py:177
+msgid "Original Has Other Versions"
+msgstr "Original hat weitere Versionen"
 
 #. Label of the paperless_correspondent_id (Int) field in DocType 'SVAN
 #. Paperless Correspondent Mapping'
@@ -625,24 +782,36 @@ msgstr "Paperless Dokumententyp-ID"
 msgid "Paperless Document Type Name"
 msgstr "Paperless Dokumententyp-Name"
 
+#. Title of a Sidebar
 #. Name of a Workspace
 #. Title of a Workspace Sidebar
+#: svan_paperless_bridge/svan_paperless_ngx_bridge/sidebar/paperless_ngx/paperless_ngx.json
 #: svan_paperless_bridge/svan_paperless_ngx_bridge/workspace/paperless_ngx/paperless_ngx.json
 #: svan_paperless_bridge/workspace_sidebar/paperless_ngx.json
 msgid "Paperless NGX"
 msgstr ""
 
-#: svan_paperless_bridge/paperless_delete.py:299
-#: svan_paperless_bridge/paperless_delete.py:350
+#. Label of the paperless_document_id (Int) field in DocType 'SVAN Paperless
+#. Import'
+#: svan_paperless_bridge/svan_paperless_ngx_bridge/doctype/svan_paperless_import/svan_paperless_import.json
+msgid "Paperless NGX Document ID"
+msgstr "Paperless NGX-Dokumenten-ID"
+
+#: svan_paperless_bridge/paperless_delete.py:171
+msgid "Paperless NGX cannot delete the original version of '{0}' on its own while other versions of it are attached here. Delete only the file in ERPNext? The original stays in Paperless NGX."
+msgstr "Paperless NGX kann die Originalversion von '{0}' nicht einzeln löschen, solange hier weitere Versionen davon angehängt sind. Nur die Datei in ERPNext löschen? Das Original bleibt in Paperless NGX erhalten."
+
+#: svan_paperless_bridge/paperless_delete.py:468
+#: svan_paperless_bridge/paperless_delete.py:521
 msgid "Paperless NGX is unreachable - deletion is blocked for now."
 msgstr "Paperless NGX ist nicht erreichbar - Löschen wird vorerst verhindert."
 
-#: svan_paperless_bridge/paperless_delete.py:315
+#: svan_paperless_bridge/paperless_delete.py:484
 #, python-brace-format
 msgid "Paperless NGX responded unexpectedly (HTTP {0}) - deletion is blocked for now."
 msgstr "Paperless NGX antwortete unerwartet (HTTP {0}) - Löschen wird vorerst verhindert."
 
-#: svan_paperless_bridge/preview.py:121
+#: svan_paperless_bridge/preview.py:129
 #, python-brace-format
 msgid "Paperless NGX responded with status {0}."
 msgstr "Paperless NGX antwortete mit Status {0}."
@@ -675,7 +844,7 @@ msgstr "Partei-Feldname"
 msgid "Please enter a file extension."
 msgstr "Bitte eine Dateiendung angeben."
 
-#: svan_paperless_bridge/svan_paperless_ngx_bridge/doctype/svan_paperless_settings/svan_paperless_settings.js:255
+#: svan_paperless_bridge/svan_paperless_ngx_bridge/doctype/svan_paperless_settings/svan_paperless_settings.js:320
 msgid "Please save your changes."
 msgstr "Bitte die Änderungen speichern!"
 
@@ -695,13 +864,19 @@ msgstr "Vorschau-Zugriffskontrolle"
 msgid "Preview not available."
 msgstr "Vorschau nicht verfügbar."
 
-#: svan_paperless_bridge/svan_paperless_ngx_bridge/doctype/svan_paperless_settings/svan_paperless_settings.js:67
+#: svan_paperless_bridge/svan_paperless_ngx_bridge/doctype/svan_paperless_settings/svan_paperless_settings.js:78
 msgid "Reconcile Global Metadata Changes"
 msgstr "Globale Metadaten-Änderungen abgleichen"
 
-#: svan_paperless_bridge/svan_paperless_ngx_bridge/doctype/svan_paperless_settings/svan_paperless_settings.js:74
+#: svan_paperless_bridge/svan_paperless_ngx_bridge/doctype/svan_paperless_settings/svan_paperless_settings.js:85
 msgid "Reconciliation has been started in the background."
 msgstr "Abgleich wurde im Hintergrund gestartet."
+
+#. Label of the import_reference_mapping (Link) field in DocType 'SVAN
+#. Paperless Settings'
+#: svan_paperless_bridge/svan_paperless_ngx_bridge/doctype/svan_paperless_settings/svan_paperless_settings.json
+msgid "Reference For Import"
+msgstr "Referenz für den Import"
 
 #. Description of the 'Maximum Files Per Run' (Int) field in DocType 'SVAN
 #. Paperless Settings'
@@ -716,15 +891,19 @@ msgid "Rename Supported"
 msgstr "Umbenennen unterstützt"
 
 #. Custom field definition
-#: svan_paperless_bridge/custom_fields.py:128
+#: svan_paperless_bridge/custom_fields.py:184
 msgid "Required to check access against the permission system of Paperless NGX. In Paperless NGX it can be found - or created anew - under your user name (top right) → \"My Profile\" → \"API Auth Token\" (copy button)."
 msgstr "Wird für den Abgleich mit dem Berechtigungssystem von Paperless NGX benötigt. In Paperless NGX unter Benutzername (oben rechts) → \"Mein Profil\" → \"API-Auth-Token\" (Kopieren-Button) zu finden bzw. dort neu erzeugbar."
 
-#: svan_paperless_bridge/svan_paperless_ngx_bridge/doctype/svan_paperless_settings/svan_paperless_settings.js:84
+#: svan_paperless_bridge/svan_paperless_ngx_bridge/doctype/svan_paperless_settings/svan_paperless_settings.js:149
 msgid "Reset Broken"
 msgstr "Broken zurücksetzen"
 
-#: svan_paperless_bridge/svan_paperless_ngx_bridge/doctype/svan_paperless_settings/svan_paperless_settings.js:150
+#: svan_paperless_bridge/svan_paperless_ngx_bridge/doctype/svan_paperless_settings/svan_paperless_settings.js:129
+msgid "Reset Import Queue"
+msgstr "Import-Warteschlange zurücksetzen"
+
+#: svan_paperless_bridge/svan_paperless_ngx_bridge/doctype/svan_paperless_settings/svan_paperless_settings.js:215
 msgid "Retroactive deletion has been started in the background."
 msgstr "Rückwirkendes Löschen wurde im Hintergrund gestartet."
 
@@ -754,38 +933,63 @@ msgstr ""
 msgid "SVAN Paperless File Type"
 msgstr ""
 
+#. Name of a DocType
+#: svan_paperless_bridge/svan_paperless_ngx_bridge/doctype/svan_paperless_import/svan_paperless_import.json
+msgid "SVAN Paperless Import"
+msgstr ""
+
 #. Custom field definition
-#: svan_paperless_bridge/custom_fields.py:117
+#: svan_paperless_bridge/custom_fields.py:173
 msgid "SVAN Paperless NGX"
 msgstr ""
 
 #. Custom field definition
-#: svan_paperless_bridge/custom_fields.py:28
+#: svan_paperless_bridge/custom_fields.py:32
 msgid "SVAN Paperless NGX Bridge: "
 msgstr ""
 
 #. Custom field definition
-#: svan_paperless_bridge/custom_fields.py:75
+#: svan_paperless_bridge/custom_fields.py:93
 msgid "SVAN Paperless NGX Bridge: Configuration state (SVAN Paperless Settings.sync_config_version) this file was last evaluated against for sync relevance."
 msgstr "SVAN Paperless NGX Bridge: Konfigurationsstand (SVAN Paperless Settings.sync_config_version), gegen den diese Datei zuletzt auf Sync-Relevanz geprüft wurde."
 
 #. Custom field definition
-#: svan_paperless_bridge/custom_fields.py:105
-msgid "SVAN Paperless NGX Bridge: Set when tags, the correspondent or a mapped custom field changed on the linked business document AFTER the initial sync (see change_watch.py). Only ever set on files that are already \"synced\" and processed by the scheduled job paperless_sync.sync_metadata_updates()."
-msgstr "SVAN Paperless NGX Bridge: Wird gesetzt, wenn sich Schlagworte, Korrespondent oder ein gemapptes Zusatzfeld am verknüpften Business-Dokument NACH dem initialen Sync geändert change_watch.py) - wird nur an bereits \"synced\" Dateien gesetzt und vom CronJob paperless_sync.sync_metadata_updates() abgearbeitet."
+#: svan_paperless_bridge/custom_fields.py:139
+msgid "SVAN Paperless NGX Bridge: File name last matched with Paperless NGX; empty until the first match."
+msgstr "SVAN Paperless NGX Bridge: Zuletzt mit Paperless NGX abgeglichener Dateiname; leer bis zum ersten Abgleich."
 
 #. Custom field definition
-#: svan_paperless_bridge/custom_fields.py:54
+#: svan_paperless_bridge/custom_fields.py:165
+msgid "SVAN Paperless NGX Bridge: Label of this file's version in Paperless NGX at the last match."
+msgstr "SVAN Paperless NGX Bridge: Label der Version dieser Datei in Paperless NGX beim letzten Abgleich."
+
+#. Custom field definition
+#: svan_paperless_bridge/custom_fields.py:123
+msgid "SVAN Paperless NGX Bridge: Set when tags, the correspondent or a mapped custom field of the business document, or the file name change after the upload (files in sync status \"syncing\" or \"synced\"); cleared once the scheduled job has pushed the metadata to Paperless NGX."
+msgstr "SVAN Paperless NGX Bridge: Wird gesetzt, wenn sich Schlagworte, Korrespondent oder ein gemapptes Zusatzfeld am Business-Dokument oder der Dateiname nach dem Upload ändern (Dateien mit Sync-Status \"syncing\" oder \"synced\"); wird zurückgesetzt, sobald der CronJob die Metadaten an Paperless NGX übertragen hat."
+
+#. Custom field definition
+#: svan_paperless_bridge/custom_fields.py:72
 msgid "SVAN Paperless NGX Bridge: Sync status with Paperless NGX: \"\" (empty) = no sync intended (DocType not whitelisted, or already uploaded to Dropbox/Google Drive), \"pending\" = waiting (will be synced on the next scheduled run), \"syncing\" = sync in progress, \"synced\" = synced, \"broken\" = failed (sync unsuccessful), \"deleted\" = the Paperless NGX document was already removed while deleting this file (see paperless_delete.py) - terminal, and like \"broken\" never considered for another sync."
 msgstr "SVAN Paperless NGX Bridge: Synchronisierungsstatus mit Paperless NGX: \"\" (leer) = Kein Sync vorgesehen (DocType nicht in Whitelist oder bereits zu Dropbox/Google Drive hochgeladen), \"pending\" = Ausstehend (wird beim nächsten CronJob-Lauf synchronisiert), \"syncing\" = Synchronisierung läuft, \"synced\" = Synchronisiert, \"broken\" = Fehlerhaft (Synchronisierung fehlgeschlagen), \"deleted\" = Das Paperless-NGX-Dokument wurde beim Löschen dieser Datei bereits entfernt (siehe paperless_delete.py) - terminal, wie \"broken\" nie erneut für einen Sync vorgesehen."
 
 #. Custom field definition
-#: svan_paperless_bridge/custom_fields.py:39
+#: svan_paperless_bridge/custom_fields.py:152
+msgid "SVAN Paperless NGX Bridge: Title of the Paperless NGX document at the last match (original only)."
+msgstr "SVAN Paperless NGX Bridge: Titel des Paperless-NGX-Dokuments beim letzten Abgleich (nur beim Original)."
+
+#. Custom field definition
+#: svan_paperless_bridge/custom_fields.py:57
 msgid "SVAN Paperless NGX Bridge: UUID returned when the file is handed over to the Paperless NGX API."
 msgstr "SVAN Paperless NGX Bridge: UUID, die beim Übergeben der Datei an die Paperless NGX-API zurückgegeben wird."
 
 #. Custom field definition
-#: svan_paperless_bridge/custom_fields.py:90
+#: svan_paperless_bridge/custom_fields.py:43
+msgid "SVAN Paperless NGX Bridge: Version of the Paperless NGX document holding this file's content; equals the document ID for the original."
+msgstr "SVAN Paperless NGX Bridge: Version des Paperless NGX-Dokuments mit dem Inhalt dieser Datei; beim Original gleich der Dokumenten-ID."
+
+#. Custom field definition
+#: svan_paperless_bridge/custom_fields.py:108
 msgid "SVAN Paperless NGX Bridge: What triggered this file record, e.g. \"erpnext\" - set automatically on insert if still empty (see file_events.set_default_source)."
 msgstr "SVAN Paperless NGX Bridge: Wodurch die Datei-Anlage ausgelöst wurde, z. B. \"erpnext\" - wird beim Anlegen automatisch gesetzt, falls beim Insert noch leer (siehe file_events.set_default_source)."
 
@@ -797,7 +1001,7 @@ msgstr "SVAN Paperless NGX Bridge: Wodurch die Datei-Anlage ausgelöst wurde, z.
 msgid "SVAN Paperless Settings"
 msgstr ""
 
-#: svan_paperless_bridge/svan_paperless_ngx_bridge/doctype/svan_paperless_settings/svan_paperless_settings.py:344
+#: svan_paperless_bridge/svan_paperless_ngx_bridge/doctype/svan_paperless_settings/svan_paperless_settings.py:416
 #, python-brace-format
 msgid "SVAN Paperless Settings are incompletely configured. Missing fields: {0}"
 msgstr "SVAN Paperless Settings sind unvollständig konfiguriert. Fehlende Felder: {0}"
@@ -827,14 +1031,25 @@ msgstr ""
 msgid "SVAN Paperless Whitelisted File Type"
 msgstr ""
 
+#: svan_paperless_bridge/public/js/reference_change_confirm.js:26
+#: svan_paperless_bridge/svan_paperless_ngx_bridge/doctype/svan_paperless_settings/svan_paperless_settings.js:337
+msgid "Save Anyway"
+msgstr "Trotzdem speichern"
+
 #. Label of the laufzeit_section (Section Break) field in DocType 'SVAN
 #. Paperless Settings'
 #: svan_paperless_bridge/svan_paperless_ngx_bridge/doctype/svan_paperless_settings/svan_paperless_settings.json
 msgid "Scheduled Job Settings"
 msgstr "CronJob-Einstellungen"
 
+#: svan_paperless_bridge/svan_paperless_ngx_bridge/doctype/svan_paperless_sync_log/svan_paperless_sync_log.py:38
+msgid "Select the entries to export."
+msgstr "Bitte die zu exportierenden Einträge markieren."
+
+#. Label of a Sidebar Item
 #. Label of a Card Break in the Paperless NGX Workspace
 #. Label of a Workspace Sidebar Item
+#: svan_paperless_bridge/svan_paperless_ngx_bridge/sidebar/paperless_ngx/paperless_ngx.json
 #: svan_paperless_bridge/svan_paperless_ngx_bridge/workspace/paperless_ngx/paperless_ngx.json
 #: svan_paperless_bridge/workspace_sidebar/paperless_ngx.json
 msgid "Settings"
@@ -846,7 +1061,7 @@ msgstr "Alle anzeigen"
 
 #. Custom field definition
 #. Label of the source (Data) field in DocType 'SVAN Paperless Sync Log'
-#: svan_paperless_bridge/custom_fields.py:82
+#: svan_paperless_bridge/custom_fields.py:100
 #: svan_paperless_bridge/svan_paperless_ngx_bridge/doctype/svan_paperless_sync_log/svan_paperless_sync_log.json
 msgid "Source"
 msgstr "Quelle"
@@ -857,7 +1072,7 @@ msgstr "Quelle"
 msgid "Source DocType"
 msgstr "Quell-DocType"
 
-#: svan_paperless_bridge/svan_paperless_ngx_bridge/doctype/svan_paperless_custom_field_mapping/svan_paperless_custom_field_mapping.py:54
+#: svan_paperless_bridge/svan_paperless_ngx_bridge/doctype/svan_paperless_custom_field_mapping/svan_paperless_custom_field_mapping.py:75
 msgid "Source DocType {0} is listed more than once - only one source field per DocType is allowed."
 msgstr "Der Quell-DocType {0} ist mehrfach aufgeführt - pro DocType ist nur ein Quellfeld erlaubt."
 
@@ -881,10 +1096,23 @@ msgstr "Quell-Felder"
 msgid "Source Fields (Count)"
 msgstr "Quell-Felder (Anzahl)"
 
-#: svan_paperless_bridge/svan_paperless_ngx_bridge/doctype/svan_paperless_settings/svan_paperless_settings.js:29
-#: svan_paperless_bridge/svan_paperless_ngx_bridge/doctype/svan_paperless_settings/svan_paperless_settings.js:46
-#: svan_paperless_bridge/svan_paperless_ngx_bridge/doctype/svan_paperless_settings/svan_paperless_settings.js:63
-#: svan_paperless_bridge/svan_paperless_ngx_bridge/doctype/svan_paperless_settings/svan_paperless_settings.js:80
+#. Description of the 'Context' (JSON) field in DocType 'SVAN Paperless Sync
+#. Log'
+#: svan_paperless_bridge/svan_paperless_ngx_bridge/doctype/svan_paperless_sync_log/svan_paperless_sync_log.json
+msgid "State of the file, its business document and the mapping when the entry was written."
+msgstr "Zustand der Datei, ihres Business-Dokuments und des Mappings zum Zeitpunkt des Eintrags."
+
+#. Label of the status (Select) field in DocType 'SVAN Paperless Import'
+#: svan_paperless_bridge/svan_paperless_ngx_bridge/doctype/svan_paperless_import/svan_paperless_import.json
+msgid "Status"
+msgstr ""
+
+#: svan_paperless_bridge/svan_paperless_ngx_bridge/doctype/svan_paperless_settings/svan_paperless_settings.js:40
+#: svan_paperless_bridge/svan_paperless_ngx_bridge/doctype/svan_paperless_settings/svan_paperless_settings.js:57
+#: svan_paperless_bridge/svan_paperless_ngx_bridge/doctype/svan_paperless_settings/svan_paperless_settings.js:74
+#: svan_paperless_bridge/svan_paperless_ngx_bridge/doctype/svan_paperless_settings/svan_paperless_settings.js:91
+#: svan_paperless_bridge/svan_paperless_ngx_bridge/doctype/svan_paperless_settings/svan_paperless_settings.js:108
+#: svan_paperless_bridge/svan_paperless_ngx_bridge/doctype/svan_paperless_settings/svan_paperless_settings.js:125
 msgid "Sync"
 msgstr "Synchronisation"
 
@@ -895,44 +1123,72 @@ msgid "Sync Config Version"
 msgstr ""
 
 #. Custom field definition
-#: svan_paperless_bridge/custom_fields.py:67
+#: svan_paperless_bridge/custom_fields.py:85
 msgid "Sync Config Version Checked"
 msgstr "Sync Config Version geprüft"
 
+#. Label of a Sidebar Item
 #. Label of a Workspace Sidebar Item
+#: svan_paperless_bridge/svan_paperless_ngx_bridge/sidebar/paperless_ngx/paperless_ngx.json
 #: svan_paperless_bridge/workspace_sidebar/paperless_ngx.json
 msgid "Sync Log"
 msgstr ""
 
 #. Custom field definition
-#: svan_paperless_bridge/custom_fields.py:45
+#: svan_paperless_bridge/custom_fields.py:63
 msgid "Sync Status"
 msgstr "Sync-Status"
+
+#. Custom field definition
+#: svan_paperless_bridge/custom_fields.py:132
+msgid "Synced File Name"
+msgstr "Abgeglichener Dateiname"
+
+#. Custom field definition
+#: svan_paperless_bridge/custom_fields.py:145
+msgid "Synced Title"
+msgstr "Abgeglichener Titel"
+
+#. Custom field definition
+#: svan_paperless_bridge/custom_fields.py:158
+msgid "Synced Version Label"
+msgstr "Abgeglichenes Versions-Label"
 
 #. Name of a role
 #: svan_paperless_bridge/svan_paperless_ngx_bridge/doctype/svan_paperless_correspondent_mapping/svan_paperless_correspondent_mapping.json
 #: svan_paperless_bridge/svan_paperless_ngx_bridge/doctype/svan_paperless_custom_field_mapping/svan_paperless_custom_field_mapping.json
 #: svan_paperless_bridge/svan_paperless_ngx_bridge/doctype/svan_paperless_file_type/svan_paperless_file_type.json
+#: svan_paperless_bridge/svan_paperless_ngx_bridge/doctype/svan_paperless_import/svan_paperless_import.json
 #: svan_paperless_bridge/svan_paperless_ngx_bridge/doctype/svan_paperless_settings/svan_paperless_settings.json
 #: svan_paperless_bridge/svan_paperless_ngx_bridge/doctype/svan_paperless_sync_log/svan_paperless_sync_log.json
 #: svan_paperless_bridge/svan_paperless_ngx_bridge/doctype/svan_paperless_tag_mapping/svan_paperless_tag_mapping.json
 msgid "System Manager"
 msgstr ""
 
+#. Label of a Sidebar Item
 #. Label of a Workspace Sidebar Item
+#: svan_paperless_bridge/svan_paperless_ngx_bridge/sidebar/paperless_ngx/paperless_ngx.json
 #: svan_paperless_bridge/workspace_sidebar/paperless_ngx.json
 msgid "Tags"
 msgstr ""
 
-#: svan_paperless_bridge/preview.py:102
+#: svan_paperless_bridge/svan_paperless_ngx_bridge/doctype/svan_paperless_settings/svan_paperless_settings.js:102
+msgid "The comparison has been started in the background."
+msgstr "Der Abgleich wurde im Hintergrund gestartet."
+
+#: svan_paperless_bridge/preview.py:110
 msgid "The document could not be loaded from Paperless NGX."
 msgstr "Dokument konnte nicht von Paperless NGX geladen werden."
 
-#: svan_paperless_bridge/svan_paperless_ngx_bridge/doctype/svan_paperless_settings/svan_paperless_settings.js:57
+#: svan_paperless_bridge/svan_paperless_ngx_bridge/doctype/svan_paperless_settings/svan_paperless_settings.js:119
+msgid "The import has been started in the background."
+msgstr "Der Import wurde im Hintergrund gestartet."
+
+#: svan_paperless_bridge/svan_paperless_ngx_bridge/doctype/svan_paperless_settings/svan_paperless_settings.js:68
 msgid "The metadata update has been started in the background."
 msgstr "Metadaten-Update wurde im Hintergrund gestartet."
 
-#: svan_paperless_bridge/paperless_delete.py:136
+#: svan_paperless_bridge/paperless_delete.py:274
 #, python-brace-format
 msgid "The original local content of file '{0}' could not be restored from Paperless NGX - deletion is blocked for now."
 msgstr "Der lokale Original-Inhalt der Datei '{0}' konnte nicht aus Paperless NGX wiederhergestellt werden - Löschen wird vorerst verhindert."
@@ -941,23 +1197,31 @@ msgstr "Der lokale Original-Inhalt der Datei '{0}' konnte nicht aus Paperless NG
 msgid "The party type of the dynamic link '{0}' on '{1}' is defined by '{2}', which is neither a link to DocType nor a selection field."
 msgstr "Der Partei-Typ des dynamischen Links '{0}' an '{1}' wird durch '{2}' bestimmt, das weder ein Link auf DocType noch ein Auswahlfeld ist."
 
-#: svan_paperless_bridge/svan_paperless_ngx_bridge/doctype/svan_paperless_settings/svan_paperless_settings.js:23
+#: svan_paperless_bridge/public/js/reference_change_confirm.js:38
+msgid "The reference for the import has no source field for: {0}. New files of these DocTypes are not transferred to Paperless NGX until it has one."
+msgstr "Die Referenz für den Import hat kein Quell-Feld für: {0}. Neue Dateien dieser DocTypes werden erst nach Paperless NGX übertragen, wenn sie eines hat."
+
+#: svan_paperless_bridge/public/js/reference_change_confirm.js:46
+msgid "The reference values of {0} linked file(s) are transferred to Paperless NGX again with their next metadata update (button 'Update Metadata Now'). Until then they are neither moved nor detached."
+msgstr "Die Referenzwerte von {0} verknüpften Datei(en) werden mit dem nächsten Metadaten-Update erneut nach Paperless NGX übertragen (Schaltfläche 'Metadaten jetzt aktualisieren'). Bis dahin werden sie weder umgehängt noch gelöst."
+
+#: svan_paperless_bridge/svan_paperless_ngx_bridge/doctype/svan_paperless_settings/svan_paperless_settings.js:34
 msgid "The transfer has been started in the background."
 msgstr "Übertragung wurde im Hintergrund gestartet."
 
-#: svan_paperless_bridge/webhook_sync.py:146
+#: svan_paperless_bridge/webhook_sync.py:155
 msgid "The webhook is not set up (no secret configured)."
 msgstr "Webhook ist nicht eingerichtet (kein Secret hinterlegt)."
 
-#: svan_paperless_bridge/preview.py:114
+#: svan_paperless_bridge/preview.py:122
 msgid "This document no longer exists in Paperless NGX."
 msgstr "Dieses Dokument existiert nicht mehr in Paperless NGX."
 
-#: svan_paperless_bridge/preview.py:75
+#: svan_paperless_bridge/preview.py:80
 msgid "This file is not linked to Paperless NGX."
 msgstr "Diese Datei ist nicht mit Paperless NGX verknüpft."
 
-#: svan_paperless_bridge/svan_paperless_ngx_bridge/doctype/svan_paperless_settings/svan_paperless_settings.js:142
+#: svan_paperless_bridge/svan_paperless_ngx_bridge/doctype/svan_paperless_settings/svan_paperless_settings.js:207
 msgid "This irreversibly deletes the physical files of all successfully synced files whose content is still stored locally. Continue?"
 msgstr "Dies löscht unwiderruflich die physischen Dateien aller bereits erfolgreich synchronisierten Dateien, deren Inhalt bisher erhalten geblieben ist. Fortfahren?"
 
@@ -966,16 +1230,20 @@ msgstr "Dies löscht unwiderruflich die physischen Dateien aller bereits erfolgr
 msgid "Title"
 msgstr "Titel"
 
-#: svan_paperless_bridge/svan_paperless_ngx_bridge/doctype/svan_paperless_settings/svan_paperless_settings.js:16
+#: svan_paperless_bridge/svan_paperless_ngx_bridge/doctype/svan_paperless_settings/svan_paperless_settings.js:27
 msgid "Transfer New Files"
 msgstr "Neue Dateien übertragen"
 
 #. Custom field definition
-#: svan_paperless_bridge/custom_fields.py:32
+#: svan_paperless_bridge/custom_fields.py:50
 msgid "UUID"
 msgstr ""
 
-#: svan_paperless_bridge/svan_paperless_ngx_bridge/doctype/svan_paperless_settings/svan_paperless_settings.js:50
+#: svan_paperless_bridge/reference_config.py:130
+msgid "Unsupported DocType {0}."
+msgstr "Nicht unterstützter DocType {0}."
+
+#: svan_paperless_bridge/svan_paperless_ngx_bridge/doctype/svan_paperless_settings/svan_paperless_settings.js:61
 msgid "Update Metadata Now"
 msgstr "Metadaten jetzt aktualisieren"
 
@@ -985,22 +1253,27 @@ msgstr "Metadaten jetzt aktualisieren"
 msgid "Used as the name when the custom field is created automatically. Must be unique - two mapping rows with the same name would collide on the same custom field."
 msgstr "Wird beim automatischen Anlegen als Name verwendet. Muss eindeutig sein - zwei Mapping-Zeilen mit demselben Namen würden auf dasselbe Zusatzfeld auflaufen."
 
+#. Custom field definition
+#: svan_paperless_bridge/custom_fields.py:36
+msgid "Version ID"
+msgstr "Versions-ID"
+
 #. Option for the 'Log Type' (Select) field in DocType 'SVAN Paperless Sync
 #. Log'
 #: svan_paperless_bridge/svan_paperless_ngx_bridge/doctype/svan_paperless_sync_log/svan_paperless_sync_log.json
 msgid "Warn"
 msgstr ""
 
-#: svan_paperless_bridge/svan_paperless_ngx_bridge/doctype/svan_paperless_settings/svan_paperless_settings.py:101
+#: svan_paperless_bridge/svan_paperless_ngx_bridge/doctype/svan_paperless_settings/svan_paperless_settings.py:173
 #, python-brace-format
 msgid "Warning: Frappe forcibly terminates the scheduled job after 300 seconds. 'Maximum Runtime (Seconds)' should stay well below that (currently: {0}s)."
 msgstr "Achtung: Frappe beendet den CronJob nach 300 Sekunden zwangsweise. 'Maximale Laufzeit (Sekunden)' sollte deutlich darunter liegen (aktuell: {0}s)."
 
-#: svan_paperless_bridge/svan_paperless_ngx_bridge/doctype/svan_paperless_settings/svan_paperless_settings.py:292
-msgid "Warning: the API token does not belong to an unrestricted (superuser) account in Paperless NGX. For reliable deletion (see option \"Enforce Document Permissions On Delete\") this service token MUST have unrestricted access to ALL documents - otherwise a document that still exists but is invisible to this token may wrongly be treated as already deleted."
-msgstr "Achtung: Der API-Token gehört keinem uneingeschränkten (Superuser-)Konto in Paperless NGX. Für zuverlässiges Löschen (siehe Option \"Berechtigungen beim Löschen berücksichtigen\") MUSS dieser Service-Token uneingeschränkten Zugriff auf ALLE Dokumente haben - sonst kann ein noch vorhandenes, für diesen Token nicht sichtbares Dokument fälschlich als bereits gelöscht behandelt werden."
+#: svan_paperless_bridge/svan_paperless_ngx_bridge/doctype/svan_paperless_settings/svan_paperless_settings.py:364
+msgid "Warning: the API token does not belong to an unrestricted (superuser) account in Paperless NGX. For reliable deletion this service token MUST have unrestricted access to ALL documents - otherwise a document that still exists but is invisible to this token may wrongly be treated as already deleted."
+msgstr "Achtung: Der API-Token gehört keinem uneingeschränkten (Superuser-)Konto in Paperless NGX. Für zuverlässiges Löschen MUSS dieser Service-Token uneingeschränkten Zugriff auf ALLE Dokumente haben - sonst kann ein noch vorhandenes, für diesen Token nicht sichtbares Dokument fälschlich als bereits gelöscht behandelt werden."
 
-#: svan_paperless_bridge/svan_paperless_ngx_bridge/doctype/svan_paperless_settings/svan_paperless_settings.py:143
+#: svan_paperless_bridge/svan_paperless_ngx_bridge/doctype/svan_paperless_settings/svan_paperless_settings.py:215
 #, python-brace-format
 msgid "Warning: the correspondent ID has changed (was: {0}, now: {1})."
 msgstr "Achtung: Die Korrespondent-ID hat sich geändert (alt: {0}, neu: {1})."
@@ -1037,18 +1310,23 @@ msgstr "Zeitpunkt, zu dem diese Zuordnung zuletzt beim Datei-Upload angelegt ode
 msgid "Without a leading dot, e.g. \"EXE\" (converted to upper case on save so it matches the extension Frappe determines internally)."
 msgstr "Ohne Punkt, z. B. \"EXE\" (wird beim Speichern automatisch groß geschrieben, damit sie zur intern von Frappe ermittelten Endung passt)."
 
-#: svan_paperless_bridge/paperless_delete.py:266
+#: svan_paperless_bridge/paperless_delete.py:435
 #, python-brace-format
 msgid "You are not allowed to delete this document in Paperless NGX - deletion of file '{0}' is blocked."
 msgstr "Sie haben in Paperless NGX keine Berechtigung, dieses Dokument zu löschen - Löschen der Datei '{0}' wird verhindert."
 
-#: svan_paperless_bridge/preview.py:81
+#: svan_paperless_bridge/preview.py:86
 msgid "You do not have permission for this document, or the document no longer exists."
 msgstr "Sie haben keine Berechtigung für dieses Dokument oder das Dokument existiert nicht mehr!"
 
-#: svan_paperless_bridge/public/js/file.js:143
+#: svan_paperless_bridge/public/js/file.js:146
 msgid "You do not have permission for this document."
 msgstr "Sie haben keine Berechtigung für dieses Dokument!"
+
+#. Option for the 'Status' (Select) field in DocType 'SVAN Paperless Import'
+#: svan_paperless_bridge/svan_paperless_ngx_bridge/doctype/svan_paperless_import/svan_paperless_import.json
+msgid "ambiguous"
+msgstr "mehrdeutig"
 
 #. Option for the 'Data Type' (Select) field in DocType 'SVAN Paperless Custom
 #. Field Mapping'
@@ -1062,15 +1340,25 @@ msgstr ""
 msgid "date"
 msgstr ""
 
-#: svan_paperless_bridge/webhook_sync.py:646
+#: svan_paperless_bridge/webhook_sync.py:666
 msgid "document_id is missing."
 msgstr "document_id fehlt."
+
+#. Option for the 'Status' (Select) field in DocType 'SVAN Paperless Import'
+#: svan_paperless_bridge/svan_paperless_ngx_bridge/doctype/svan_paperless_import/svan_paperless_import.json
+msgid "failed"
+msgstr "fehlgeschlagen"
 
 #. Option for the 'Data Type' (Select) field in DocType 'SVAN Paperless Custom
 #. Field Mapping'
 #: svan_paperless_bridge/svan_paperless_ngx_bridge/doctype/svan_paperless_custom_field_mapping/svan_paperless_custom_field_mapping.json
 msgid "float"
 msgstr ""
+
+#. Option for the 'Status' (Select) field in DocType 'SVAN Paperless Import'
+#: svan_paperless_bridge/svan_paperless_ngx_bridge/doctype/svan_paperless_import/svan_paperless_import.json
+msgid "imported"
+msgstr "importiert"
 
 #. Option for the 'Data Type' (Select) field in DocType 'SVAN Paperless Custom
 #. Field Mapping'
@@ -1090,6 +1378,16 @@ msgstr ""
 msgid "monetary"
 msgstr ""
 
+#. Option for the 'Status' (Select) field in DocType 'SVAN Paperless Import'
+#: svan_paperless_bridge/svan_paperless_ngx_bridge/doctype/svan_paperless_import/svan_paperless_import.json
+msgid "not_found"
+msgstr "nicht gefunden"
+
+#. Option for the 'Status' (Select) field in DocType 'SVAN Paperless Import'
+#: svan_paperless_bridge/svan_paperless_ngx_bridge/doctype/svan_paperless_import/svan_paperless_import.json
+msgid "pending"
+msgstr "ausstehend"
+
 #. Option for the 'Data Type' (Select) field in DocType 'SVAN Paperless Custom
 #. Field Mapping'
 #: svan_paperless_bridge/svan_paperless_ngx_bridge/doctype/svan_paperless_custom_field_mapping/svan_paperless_custom_field_mapping.json
@@ -1102,8 +1400,12 @@ msgstr ""
 msgid "url"
 msgstr ""
 
-#: svan_paperless_bridge/svan_paperless_ngx_bridge/doctype/svan_paperless_settings/svan_paperless_settings.js:93
+#: svan_paperless_bridge/svan_paperless_ngx_bridge/doctype/svan_paperless_settings/svan_paperless_settings.js:158
 #, python-brace-format
 msgid "{0} file(s) reset."
 msgstr "{0} Datei(en) zurückgesetzt."
+
+#: svan_paperless_bridge/svan_paperless_ngx_bridge/doctype/svan_paperless_settings/svan_paperless_settings.js:138
+msgid "{0} import(s) reset."
+msgstr "{0} Import(e) zurückgesetzt."
 

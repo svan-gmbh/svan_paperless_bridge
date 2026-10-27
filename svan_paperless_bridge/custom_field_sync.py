@@ -4,6 +4,7 @@
 import frappe
 import requests
 
+from svan_paperless_bridge.utils.field_options import is_value_field
 from svan_paperless_bridge.utils.sync_log import log_sync_event
 
 DEFAULT_PAGE_SIZE = 100
@@ -237,7 +238,7 @@ def get_paperless_custom_field_values_for_document(
 	# ("Unknown column") and block the upload of every file of this DocType.
 	meta = frappe.get_meta(attached_to_doctype)
 	all_fieldnames = list({row.source_fieldname for row in source_rows})
-	fieldnames = [f for f in all_fieldnames if meta.get_field(f)]
+	fieldnames = [f for f in all_fieldnames if is_value_field(meta, f)]
 
 	# A dropped field counts as an empty value below.
 	business_doc_values = (

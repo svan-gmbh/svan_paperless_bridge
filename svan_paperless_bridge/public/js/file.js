@@ -90,12 +90,15 @@ function bind_download_guard(frm) {
 	// The core "Download" button cannot be intercepted (core's handler runs anyway and a
 	// failed <a download> is not observable), so a parallel listener only shows the message.
 	//
-	// setTimeout: core's refresh() may add the button after ours runs.
+	// setTimeout: core's refresh() may add the button after ours runs. Matched by its text,
+	// not by class (Frappe 16.52 renders "es-button"); the menu holds a second entry.
 	setTimeout(() => {
-		const $btn = frm.page.wrapper.find("a.btn, button.btn").filter(function () {
-			return $(this).text().trim() === __("Download");
+		const $btn = frm.page.wrapper.find("button, a").filter(function () {
+			return (
+				$(this).text().trim() === __("Download") && !$(this).data("svanDownloadGuardBound")
+			);
 		});
-		if (!$btn.length || $btn.data("svanDownloadGuardBound")) {
+		if (!$btn.length) {
 			return;
 		}
 		$btn.data("svanDownloadGuardBound", true);

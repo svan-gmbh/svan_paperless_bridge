@@ -4,3 +4,9 @@
 
 [post_model_sync]
 # Patches added in this section will be executed after doctypes are migrated
+svan_paperless_bridge.patches.add_svan_paperless_version_id_to_file
+svan_paperless_bridge.patches.set_default_max_import_attempts
+svan_paperless_bridge.patches.set_module_on_svan_paperless_custom_fields
+svan_paperless_bridge.patches.add_svan_paperless_synced_name_to_file
+svan_paperless_bridge.patches.add_index_to_svan_paperless_document_id
+svan_paperless_bridge.patches.set_default_archive_deleted_files

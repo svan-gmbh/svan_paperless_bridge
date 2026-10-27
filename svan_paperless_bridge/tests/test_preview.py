@@ -23,6 +23,11 @@ class TestPreview(PaperlessTestCase):
 
 		self.assertEqual(frappe.response["filecontent"], self.content)
 
+	def test_file_id_appended_by_file_form_is_ignored(self):
+		stream(f"{self.file_doc.name}?fid={self.file_doc.name}")
+
+		self.assertEqual(frappe.response["filecontent"], self.content)
+
 	def test_document_gone_in_paperless_breaks_file(self):
 		self.paperless.delete_document(self.file_doc.svan_paperless_document_id)
 
