@@ -3,7 +3,7 @@
 
 import frappe
 import requests
-from frappe import _
+from frappe import N_, _
 from frappe.model.document import Document
 
 from svan_paperless_bridge.svan_paperless_ngx_bridge.doctype.svan_paperless_whitelisted_doctype.svan_paperless_whitelisted_doctype import (
@@ -12,6 +12,23 @@ from svan_paperless_bridge.svan_paperless_ngx_bridge.doctype.svan_paperless_whit
 	validate_party_fieldname,
 )
 from svan_paperless_bridge.utils.sync_log import log_sync_event
+
+CUSTOM_FIELD_MAPPING = "SVAN Paperless Custom Field Mapping"
+DEFAULT_MAX_IMPORT_ATTEMPTS = 10
+
+
+def is_import_reference(mapping_name):
+	return bool(mapping_name) and mapping_name == frappe.db.get_single_value(
+		"SVAN Paperless Settings", "import_reference_mapping"
+	)
+
+
+def show_reference_not_bidirectional_alert():
+	frappe.msgprint(
+		_("'Bidirectional' was switched off for the reference of the file import."),
+		alert=True,
+		indicator="yellow",
+	)
 
 
 class SVANPaperlessSettings(Document):
@@ -25,6 +42,7 @@ class SVANPaperlessSettings(Document):
 		self.strip_default_correspondent()
 		self.validate_api_call_timeout()
 		self.validate_whitelisted_doctypes()
+		self.validate_import_settings()
 		self.test_paperless_connection()
 		self.warn_if_api_token_restricted()
 		self.bump_sync_config_version_if_whitelists_changed()
@@ -44,6 +62,46 @@ class SVANPaperlessSettings(Document):
 		from svan_paperless_bridge.change_watch import invalidate_watched_doctype_map_cache
 
 		invalidate_watched_doctype_map_cache()
+		self.apply_import_config_change()
+		self.flag_files_of_added_doctypes()
+
+	def flag_files_of_added_doctypes(self):
+		"""Nothing was synced while a DocType was off the whitelist: its synced files
+		get a metadata update, ERPNext wins.
+		"""
+		before = self.get_doc_before_save()
+		if not before:
+			return
+		added = {row.document_type for row in self.whitelisted_doctypes} - {
+			row.document_type for row in before.whitelisted_doctypes
+		}
+		if added:
+			frappe.db.set_value(
+				"File",
+				{"attached_to_doctype": ["in", list(added)], "svan_paperless_sync_status": "synced"},
+				"svan_paperless_needs_update",
+				1,
+				update_modified=False,
+			)
+
+	def apply_import_config_change(self):
+		"""A new reference has to reach the documents of the linked files before
+		anything is moved or detached by it, and changed import rules need a new
+		scan (see reference_config.py).
+		"""
+		from svan_paperless_bridge.reference_config import (
+			flag_files_for_reference_backfill,
+			import_rules_changed_on_settings,
+			reference_changed_on_settings,
+			restart_import_scan,
+		)
+
+		if reference_changed_on_settings(self):
+			flag_files_for_reference_backfill(self.import_reference_mapping)
+		if import_rules_changed_on_settings(self):
+			restart_import_scan()
+			# The form gets this document back; saving it again must not restore the old watermark.
+			self.import_scan_watermark = ""
 
 	def validate_whitelisted_doctypes(self):
 		"""Validate party_fieldname of every whitelist row, fill in
@@ -72,6 +130,20 @@ class SVANPaperlessSettings(Document):
 						).format(row.document_type)
 					)
 				seen_document_types.add(row.document_type)
+
+	def validate_import_settings(self):
+		"""An import tag needs a reference; the reference mapping is never synced back
+		from Paperless NGX, so its "Bidirectional" is switched off.
+		"""
+		if not self.max_import_attempts:
+			self.max_import_attempts = DEFAULT_MAX_IMPORT_ATTEMPTS
+		if self.import_tag and not self.import_reference_mapping:
+			frappe.throw(_("An import tag needs a reference for the import."))
+		if self.import_reference_mapping and frappe.db.get_value(
+			CUSTOM_FIELD_MAPPING, self.import_reference_mapping, "bidirectional"
+		):
+			frappe.db.set_value(CUSTOM_FIELD_MAPPING, self.import_reference_mapping, "bidirectional", 0)
+			show_reference_not_bidirectional_alert()
 
 	def strip_default_correspondent(self):
 		"""Strip leading/trailing whitespace from default_correspondent.
@@ -291,8 +363,8 @@ class SVANPaperlessSettings(Document):
 			frappe.msgprint(
 				_(
 					"Warning: the API token does not belong to an unrestricted (superuser) account in "
-					'Paperless NGX. For reliable deletion (see option "Enforce Document Permissions On '
-					'Delete") this service token MUST have unrestricted access to ALL documents - '
+					"Paperless NGX. For reliable deletion this service token MUST have unrestricted "
+					"access to ALL documents - "
 					"otherwise a document that still exists but is invisible to this token may wrongly "
 					"be treated as already deleted."
 				),
@@ -314,22 +386,22 @@ def validate_settings(settings: "SVANPaperlessSettings") -> None:
 	missing = []
 
 	if not settings.api_url:
-		missing.append(_("API URL"))
+		missing.append(N_("API URL"))
 
 	if not settings.get_password("api_token", raise_exception=False):
-		missing.append(_("API Token"))
+		missing.append(N_("API Token"))
 
 	if not settings.default_correspondent:
-		missing.append(_("Default Correspondent"))
+		missing.append(N_("Default Correspondent"))
 
 	if not settings.svan_default_correspondent_id:
-		missing.append(_("Correspondent ID"))
+		missing.append(N_("Correspondent ID"))
 
 	if not settings.whitelisted_doctypes:
-		missing.append(_("Allowed DocTypes (whitelist)"))
+		missing.append(N_("Allowed DocTypes (whitelist)"))
 
 	if not settings.whitelisted_file_types:
-		missing.append(_("Allowed File Types (whitelist)"))
+		missing.append(N_("Allowed File Types (whitelist)"))
 
 	if missing:
 		log_sync_event(
@@ -338,10 +410,10 @@ def validate_settings(settings: "SVANPaperlessSettings") -> None:
 			"Error",
 			"validate_settings",
 			title="Settings incompletely configured",
-			details=_("Missing fields: {0}").format(", ".join(missing)),
+			details=f"Missing fields: {', '.join(missing)}",
 		)
 		frappe.throw(
 			_("SVAN Paperless Settings are incompletely configured. Missing fields: {0}").format(
-				", ".join(missing)
+				", ".join(_(field) for field in missing)
 			)
 		)

@@ -178,6 +178,23 @@ def handle_watched_doctype_on_change(doc, method=None):
 		)
 
 
+def handle_watched_doctype_rename(doc, method, old, new, merge=False):
+	"""doc_events["*"]["after_rename"]: a renamed business document changes its ID,
+	which a custom field (e.g. the reference for the import) may transfer. Without a
+	push the reference in Paperless NGX would point at the old name, and the file be
+	detached on the next change there (see document_relink.py).
+	"""
+	if doc.doctype not in get_watched_doctype_map():
+		return
+	try:
+		_flag_business_record(doc.doctype, new)
+	except Exception:
+		frappe.log_error(
+			title="svan_paperless_bridge: rename detection failed",
+			message=frappe.get_traceback(),
+		)
+
+
 def _rename_correspondent_if_mapped(party_type, party_value, new_display_name):
 	"""Rename the corresponding Paperless NGX correspondent directly via PATCH -
 	if a "SVAN Paperless Correspondent Mapping" row already exists for this party.
@@ -302,8 +319,8 @@ def refresh_user_tags_cache_for_documents(document_pairs):
 	field) everywhere by cascade, but leaves "_user_tags" - a purely
 	comma-separated DISPLAY copy directly on each tagged document, NOT a link
 	field - unchanged. Without this repair, a LATER add_tag()/remove_tag() on an
-	affected document fails with frappe.LinkValidationError (reproduced live, see
-	AGENTS.md): on the next call DocTags.update() rebuilds the tag list from the
+	affected document fails with frappe.LinkValidationError (reproduced live):
+	on the next call DocTags.update() rebuilds the tag list from the
 	(then stale) "_user_tags" value and validates every name in it against a "Tag"
 	ID that no longer exists after the rename - and it does so for ALL tags present
 	on the document together, not only for the one just added or removed, so a
@@ -360,8 +377,7 @@ def remove_tag_override(tag: str, dt: str, dn: str):
 
 	Does NOT cover the case of other Python code calling Document.remove_tag()
 	directly (which bypasses the whitelist dispatch layer that
-	override_whitelisted_methods hooks into) - a known, documented gap (see
-	AGENTS.md).
+	override_whitelisted_methods hooks into) - a known gap.
 	"""
 	from frappe.desk.doctype.tag.tag import DocTags
 

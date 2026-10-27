@@ -6,8 +6,8 @@
 // hook for own sidebar sections, so the markup is added to the existing sidebar -
 // if its structure changes, nothing is shown.
 
-// Same file as SVAN_LOGO_URL in desktop_icon.py.
-const SVAN_LOGO_URL = "/assets/svan_base/images/svan-logo-icon.svg";
+// Same file as the app_logo_url hook.
+const SVAN_LOGO_URL = "/assets/svan_paperless_bridge/images/svan-logo-icon.svg";
 const DUPLICATES_PAGE_LENGTH = 10;
 
 frappe.ui.form.on("File", {

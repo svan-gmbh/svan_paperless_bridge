@@ -7,7 +7,7 @@ correspondent or mapped custom fields IN Paperless NGX back to ERPNext -
 triggered by a webhook Paperless NGX calls actively, not by a scheduled job. The
 workflow needed for this (trigger "Document Updated", action "Webhook") is
 deliberately NOT set up in Paperless NGX from this app but configured there
-manually - see AGENTS.md for step-by-step instructions.
+manually (Settings, section "Webhook", lists the values).
 generate_webhook_secret() only provides the secret that has to be stored in the
 webhook action as the header "Webhook-Secret".
 
@@ -22,11 +22,15 @@ Sequence per call:
    (a document belongs to one File), several only for files that already shared
    a document before that rule. Several files pointing at the same business
    document are deduplicated to ONE business document - each business document is
-   updated only once.
+   updated only once. A business document whose file still waits for a metadata
+   push (svan_paperless_needs_update) is skipped: ERPNext wins.
 2. The full current document state is loaded from Paperless NGX ONCE via GET
    (not from the webhook body itself - which deliberately carries only the
-   document ID, see AGENTS.md for the rationale) and applied to every affected
-   business document (_apply_document_to_business_record()).
+   document ID, so it cannot be stale). Files whose version it no longer has are
+   deleted (paperless_compare.py), linked files may move or be detached
+   (document_relink.py), new versions are imported (version_import.py), changed
+   file names taken over (name_sync.py); unless the files moved, it is applied to
+   every affected business document (_apply_document_to_business_record()).
 
 Tags and custom field values are synced genuinely both ways (adding, changing
 AND removing), but PER tag/custom field mapping row only if "Bidirectional" is
@@ -73,8 +77,13 @@ from svan_paperless_bridge.correspondent_sync import (
 	get_party_field,
 	is_party_bidirectional,
 )
+from svan_paperless_bridge.name_sync import apply_paperless_names
+from svan_paperless_bridge.paperless_compare import delete_files_of_deleted_versions
+from svan_paperless_bridge.paperless_import import import_unlinked_document, relink_linked_document
 from svan_paperless_bridge.tag_sync import ensure_frappe_tag_for_paperless_id
 from svan_paperless_bridge.utils.sync_log import log_sync_event
+from svan_paperless_bridge.utils.whitelist import whitelisted_filter
+from svan_paperless_bridge.version_import import import_new_versions
 
 WEBHOOK_SECRET_HEADER = "Webhook-Secret"
 
@@ -164,8 +173,8 @@ def _verify_webhook_secret(settings):
 
 def _fetch_paperless_document(document_id, settings):
 	"""Load the full current state of ONE document from Paperless NGX
-	(GET /documents/<id>/) - the webhook body itself carries only the document ID
-	(see AGENTS.md), so the actual content (tags, correspondent, custom field
+	(GET /documents/<id>/) - the webhook body itself carries only the document ID,
+	so the actual content (tags, correspondent, custom field
 	values) is fetched freshly here.
 
 	Returns the parsed JSON dict, or None on any failure (network/HTTP/JSON error,
@@ -494,11 +503,11 @@ def _apply_field_change(business_doctype, business_name, fieldname, value, setti
 	analogous to paperless_sync.save_uuid()/finalize_sync()): on a multi-user system
 	another user may have changed the same business document between loading and
 	saving (frappe.QueryDeadlockError covers both real deadlocks and "Record has
-	changed since last read" in this Frappe version, see AGENTS.md) - on such a
+	changed since last read" in this Frappe version) - on such a
 	system that is the normal case, not an edge case. If all attempts fail (for
 	whatever reason, including a genuine validation rejection), it is logged as a
 	warning instead of aborting the processing of the remaining
-	fields/business documents (see AGENTS.md) - unlike save_uuid()/finalize_sync()
+	fields/business documents - unlike save_uuid()/finalize_sync()
 	there is no "must become terminal" requirement here, so there is no final
 	db_set() enforcement; the file/document simply keeps its previous value.
 
@@ -598,10 +607,21 @@ def _apply_document_to_business_record(business_doctype, business_name, document
 	)
 
 
+def _whitelisted_files(document_id, settings):
+	return frappe.get_all(
+		"File",
+		filters={
+			"svan_paperless_document_id": str(document_id),
+			"attached_to_doctype": whitelisted_filter(settings),
+		},
+		pluck="name",
+	)
+
+
 @frappe.whitelist(allow_guest=True)
 def receive_update(document_id=None, **kwargs):
-	"""Webhook endpoint for Paperless NGX (see AGENTS.md for how to set up the
-	required workflow in Paperless NGX manually) - called actively on every update
+	"""Webhook endpoint for Paperless NGX (the workflow calling it is set up in
+	Paperless NGX manually) - called actively on every update
 	of a document in Paperless NGX (trigger "Document Updated"), NOT by a scheduled
 	job.
 
@@ -646,20 +666,40 @@ def receive_update(document_id=None, **kwargs):
 		frappe.throw(_("document_id is missing."))
 	document_id = frappe.utils.cint(document_id)
 
-	file_names = frappe.get_all("File", filters={"svan_paperless_document_id": document_id}, pluck="name")
+	# A string: compared with a number, MariaDB ignores the index on the Data column.
+	if not frappe.db.exists("File", {"svan_paperless_document_id": str(document_id)}):
+		# Most documents in Paperless NGX have nothing to do with ERPNext - silently.
+		import_unlinked_document(document_id, settings)
+		return
+	file_names = _whitelisted_files(document_id, settings)
 	if not file_names:
-		log_sync_event(
-			None,
-			settings,
-			"Info",
-			"webhook_sync.receive_update",
-			title="No linked file found - skipped",
-			details=f"Paperless NGX document ID: {document_id}",
-		)
+		# Its files belong to a DocType no longer whitelisted and stay as they are.
+		return
+
+	document = _fetch_paperless_document(document_id, settings)
+	if not document:
+		return
+
+	# Deleting a version fires "Document Updated" for its document.
+	if delete_files_of_deleted_versions(document, settings):
+		file_names = _whitelisted_files(document_id, settings)
+		if not file_names:
+			return
+
+	relinked = relink_linked_document(document_id, settings, document)
+	# After the relink, so a new version joins the files at their new business document.
+	import_new_versions(document, settings, "webhook_sync.receive_update")
+	apply_paperless_names(document, settings, "webhook_sync.receive_update")
+	if relinked:
+		# Moved files get the metadata of their new business document; nothing is applied back.
 		return
 
 	business_records = {}
+	pending_update = set()
 	for file_name in file_names:
+		if not frappe.db.exists("File", file_name):
+			# Deleted meanwhile, e.g. archived by a deletion firing another webhook.
+			continue
 		business_doctype, business_name = _resolve_business_record(file_name)
 		if not business_doctype:
 			log_sync_event(
@@ -672,12 +712,25 @@ def receive_update(document_id=None, **kwargs):
 			)
 			continue
 		business_records.setdefault((business_doctype, business_name), file_name)
+		if frappe.db.get_value("File", file_name, "svan_paperless_needs_update"):
+			pending_update.add((business_doctype, business_name))
+
+	# ERPNext wins: Paperless NGX still shows the state before the pending push, applying it
+	# would undo the change in ERPNext (or clear a mandatory party, as after an import).
+	for business_doctype, business_name in pending_update:
+		log_sync_event(
+			business_records.pop((business_doctype, business_name)),
+			settings,
+			"Info",
+			"webhook_sync.receive_update",
+			title="Update from ERPNext pending - changes from Paperless NGX not applied",
+			details=(
+				f"Business document: {business_doctype} {business_name}\n"
+				f"Paperless NGX document ID: {document_id}"
+			),
+		)
 
 	if not business_records:
-		return
-
-	document = _fetch_paperless_document(document_id, settings)
-	if not document:
 		return
 
 	for (business_doctype, business_name), log_file_name in business_records.items():

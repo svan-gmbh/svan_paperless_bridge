@@ -7,6 +7,8 @@ from svan_paperless_bridge.document_access import set_my_paperless_api_token
 from svan_paperless_bridge.paperless_delete import handle_file_on_trash
 from svan_paperless_bridge.tests.paperless_test_case import PaperlessTestCase
 
+SYNC_LOG = "SVAN Paperless Sync Log"
+
 
 class TestDelete(PaperlessTestCase):
 	def test_unsynced_file_is_deleted_without_paperless(self):
@@ -46,6 +48,40 @@ class TestDelete(PaperlessTestCase):
 
 		with self.paperless_unreachable():
 			self.assertRaises(frappe.ValidationError, frappe.delete_doc, "File", file_doc.name)
+
+	def test_offloaded_content_already_gone_in_paperless_does_not_block(self):
+		self.settings.delete_physical_file = 1
+		self.settings.save()
+		file_doc = self.synced_file(self.make_invoice())
+		self.paperless.delete_document(file_doc.svan_paperless_document_id)
+
+		frappe.delete_doc("File", file_doc.name)
+
+		self.assertFalse(frappe.db.exists("File", file_doc.name))
+
+	def test_log_entries_of_blocked_deletions_survive_the_rollback(self):
+		self.settings.delete_physical_file = 1
+		self.settings.save()
+		invoice = self.make_invoice()
+		file_docs = [self.synced_file(invoice, file_name=name) for name in ("a.pdf", "b.pdf")]
+		frappe.db.savepoint("before_delete")
+
+		with self.paperless_unreachable():
+			for file_doc in file_docs:
+				self.assertRaises(frappe.ValidationError, frappe.delete_doc, "File", file_doc.name)
+		# What a full rollback does, without losing the test's own data.
+		frappe.db.rollback(save_point="before_delete")
+		frappe.db.after_rollback.run()
+
+		for file_doc in file_docs:
+			self.assertTrue(frappe.db.exists("File", file_doc.name))
+			self.assertEqual(
+				frappe.db.count(
+					SYNC_LOG,
+					{"reference_file": file_doc.name, "title": "Restoring the local original content failed"},
+				),
+				1,
+			)
 
 	def test_offloaded_content_is_restored_before_deletion(self):
 		self.settings.delete_physical_file = 1

@@ -56,8 +56,34 @@ class LivePaperless:
 
 	def delete_document(self, document_id):
 		"""Delete for good: Paperless NGX first moves a document to the trash."""
-		self._request("DELETE", f"/documents/{document_id}/")
+		self.trash_document(document_id)
 		self._request("POST", "/trash/", json={"action": "empty", "documents": [document_id]})
+
+	def trash_document(self, document_id):
+		self._request("DELETE", f"/documents/{document_id}/").raise_for_status()
+
+	def delete_version(self, document_id, version_id):
+		self._request("DELETE", f"/documents/{document_id}/versions/{version_id}/").raise_for_status()
+
+	def set_version_label(self, document_id, version_id, label):
+		self._request(
+			"PATCH", f"/documents/{document_id}/versions/{version_id}/", json={"version_label": label}
+		).raise_for_status()
+
+	def version_label(self, document_id, version_id):
+		versions = self.document(document_id)["versions"]
+		return next(v["version_label"] for v in versions if str(v["id"]) == str(version_id))
+
+	def inventory(self):
+		"""Every document of the instance with its versions and metadata, by ID."""
+		fields = "id,title,versions,tags,correspondent,document_type,custom_fields,original_file_name"
+		return {document["id"]: document for document in self._all("/documents/", fields=fields)}
+
+	def restore(self, document_id):
+		"""Restore a document or a version from the trash."""
+		self._request(
+			"POST", "/trash/", json={"action": "restore", "documents": [document_id]}
+		).raise_for_status()
 
 	def upload(self, content, title):
 		task_id = self._request(
@@ -66,13 +92,24 @@ class LivePaperless:
 			data={"title": title},
 			files={"document": (f"{title}.pdf", content)},
 		).json()
+		return self.wait_for_task(task_id)
+
+	def add_version(self, document_id, file_name, content):
+		"""Returns the ID of the new version."""
+		task_id = self._request(
+			"POST", f"/documents/{document_id}/update_version/", files={"document": (file_name, content)}
+		).json()
+		return self.wait_for_task(task_id)
+
+	def wait_for_task(self, task_id):
+		"""The ID the consume task created (a document or a version)."""
 		deadline = time.monotonic() + 60
 		while time.monotonic() < deadline:
 			tasks = self.get("/tasks/", task_id=task_id)["results"]
 			if tasks and tasks[0]["status"].lower() == "success":
 				return tasks[0]["related_document_ids"][0]
 			time.sleep(0.5)
-		raise TimeoutError(f"Paperless NGX did not consume {title}")
+		raise TimeoutError(f"Paperless NGX did not finish task {task_id}")
 
 	def create_user(self):
 		"""A non-superuser with model permissions; document access comes from
@@ -108,10 +145,16 @@ class LivePaperless:
 		instance's own data.
 		"""
 		prefix = prefix or self.prefix
-		documents = self._named("/documents/", "title", prefix, title__istartswith=prefix)
+		# Also by file name: a test may have emptied the title.
+		documents = set(self._named("/documents/", "title", prefix, title__istartswith=prefix)) | set(
+			self._named("/documents/", "original_file_name", prefix, original_filename__istartswith=prefix)
+		)
 		for document_id in documents:
 			self._request("DELETE", f"/documents/{document_id}/")
-		trashed = self._named("/trash/", "title", prefix)
+		trashed = list(
+			set(self._named("/trash/", "title", prefix))
+			| set(self._named("/trash/", "original_file_name", prefix))
+		)
 		if trashed:
 			self._request("POST", "/trash/", json={"action": "empty", "documents": trashed})
 		for endpoint in ENTITY_ENDPOINTS:

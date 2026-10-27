@@ -1,0 +1,59 @@
+/* SVAN logo on the label of all elements with the svan_ field name prefix (cross-app).
+   Every SVAN app ships this marker, so it does not depend on svan_base. All copies keep the
+   same selectors and pseudo-elements: they then style one and the same pseudo-element, and an
+   element is marked once however many SVAN apps are installed. Only the logo URL differs;
+   tests/test_svan_marker.py compares the rules with svan_base's copy. */
+
+:root {
+	--svan-logo: url("/assets/svan_paperless_bridge/images/svan-logo-icon.svg");
+}
+
+/* Suffix: form labels */
+.form-tabs .nav-link[data-fieldname^="svan_"]::after,
+.form-section[data-fieldname^="svan_"] > .section-head::after,
+.frappe-control[data-fieldname^="svan_"] .control-label::after,
+.frappe-control[data-fieldname^="svan_"] .label-area::after,
+/* Prefix: headers that Frappe truncates with "…" */
+.grid-heading-row .grid-static-col[data-fieldname^="svan_"] .static-area::before,
+.list-row-head .list-row-col[data-fieldname^="svan_"] > span::before {
+	content: "";
+	display: inline-block;
+	flex-shrink: 0;
+	width: 0.9em;
+	height: 0.9em;
+	vertical-align: -0.1em;
+	background: var(--svan-logo) center / contain no-repeat;
+}
+
+.form-section[data-fieldname^="svan_"] > .section-head::after,
+.frappe-control[data-fieldname^="svan_"] .control-label::after,
+.frappe-control[data-fieldname^="svan_"] .label-area::after {
+	margin-left: 0.3em;
+}
+
+.grid-heading-row .grid-static-col[data-fieldname^="svan_"] .static-area::before,
+.list-row-head .list-row-col[data-fieldname^="svan_"] > span::before {
+	margin-right: 0.3em;
+}
+
+/* Required field: Frappe's asterisk and the logo share ::after ("Label Logo *") */
+.frappe-control[data-fieldname^="svan_"] .control-label.reqd::after {
+	content: "*";
+	display: inline;
+	width: auto;
+	height: auto;
+	padding-left: 1.2em;
+	background-position: left center;
+	background-size: 0.9em;
+}
+
+/* Collapsible section: logo before the expand/collapse arrow */
+.form-section[data-fieldname^="svan_"] > .section-head.collapsible {
+	display: flex;
+	align-items: center;
+}
+
+.form-section[data-fieldname^="svan_"] > .section-head.collapsible > .collapse-indicator {
+	order: 1;
+	margin-left: 0.3em;
+}

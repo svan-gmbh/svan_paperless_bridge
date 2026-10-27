@@ -29,7 +29,21 @@ from svan_paperless_bridge.document_type_sync import (
 	get_paperless_document_type_id_for_document,
 	repair_stale_document_type_id,
 )
+from svan_paperless_bridge.file_versions import (
+	WAIT_FOR_ORIGINAL,
+	find_version_target,
+	held_version_ids,
+	lock_attachments,
+	post_version,
+)
+from svan_paperless_bridge.name_sync import (
+	align_uploaded_file,
+	apply_paperless_names,
+	push_file_names,
+	remember_sent_names,
+)
 from svan_paperless_bridge.preview import PREVIEW_METHOD_PATH, get_preview_url, is_preview_url
+from svan_paperless_bridge.reference_config import has_reference_gap
 from svan_paperless_bridge.svan_paperless_ngx_bridge.doctype.svan_paperless_settings.svan_paperless_settings import (
 	validate_settings,
 )
@@ -41,6 +55,7 @@ from svan_paperless_bridge.tag_sync import (
 )
 from svan_paperless_bridge.utils.document_claim import is_document_id_held_by_other_file
 from svan_paperless_bridge.utils.sync_log import log_sync_event
+from svan_paperless_bridge.utils.whitelist import whitelisted_doctypes, whitelisted_filter
 
 MAX_SAVE_ATTEMPTS = 5
 
@@ -175,16 +190,88 @@ def save_uuid(file_name, settings, new_uuid, origin=None):
 			return
 
 
-def find_unclaimed_document_by_checksum(checksum, settings):
+def find_unclaimed_document_by_checksum(checksum, file_doc, settings):
 	"""Return the ID of a Paperless NGX document with this checksum that no File
 	references yet (e.g. left behind by an upload whose task UUID was never saved),
 	otherwise None. Documents already owned by a File are skipped: every File needs
 	a document of its own.
+
+	A document whose File only knows the task UUID so far (the poll has not run
+	yet) looks unclaimed as well. Documents created by the open upload tasks of
+	files with the same content are therefore skipped too.
 	"""
-	for document_id in find_paperless_document_ids_by_checksum(checksum, settings):
-		if not is_document_id_held_by_other_file(document_id):
-			return document_id
-	return None
+	candidates = [
+		document_id
+		for document_id in find_paperless_document_ids_by_checksum(checksum, settings)
+		if not is_document_id_held_by_other_file(document_id)
+	]
+	if not candidates:
+		return None
+
+	pending_document_ids = _documents_of_pending_uploads(file_doc, settings)
+	if pending_document_ids is None:
+		return None
+
+	unclaimed = [document_id for document_id in candidates if str(document_id) not in pending_document_ids]
+	if len(unclaimed) < len(candidates):
+		log_sync_event(
+			file_doc.name,
+			settings,
+			"Info",
+			"find_unclaimed_document_by_checksum",
+			title="Checksum match belongs to a pending upload of another file - not adopted",
+			details=f"Skipped Paperless NGX document IDs: {', '.join(pending_document_ids)}",
+		)
+	return unclaimed[0] if unclaimed else None
+
+
+def _documents_of_pending_uploads(file_doc, settings):
+	"""Document IDs the finished upload tasks of other files with the same content
+	have created before their poll stored them. None if a task could not be checked:
+	then nothing is adopted, an upload of its own costs at most a duplicate.
+	"""
+	if not file_doc.content_hash:
+		return None
+
+	uuids = frappe.get_all(
+		"File",
+		filters={
+			"content_hash": file_doc.content_hash,
+			"name": ["!=", file_doc.name],
+			"svan_paperless_uuid": ["is", "set"],
+			"svan_paperless_document_id": ["in", ["", None]],
+		},
+		pluck="svan_paperless_uuid",
+	)
+
+	document_ids = set()
+	for uuid in uuids:
+		try:
+			response = requests.get(
+				settings.api_url.rstrip("/") + "/tasks/",
+				headers={
+					"Authorization": f"Token {settings.get_password('api_token', raise_exception=False)}"
+				},
+				params={"task_id": uuid},
+				timeout=settings.api_call_timeout or 30,
+				verify=True,
+			)
+			response.raise_for_status()
+			tasks = response.json().get("results", [])
+		except Exception:
+			log_sync_event(
+				file_doc.name,
+				settings,
+				"Warn",
+				"find_unclaimed_document_by_checksum",
+				title="Pending upload of a file with the same content could not be checked - not adopting",
+				details=f"Task UUID: {uuid}\n\n{frappe.get_traceback()}",
+			)
+			return None
+		for task in tasks:
+			document_ids.update(str(document_id) for document_id in task.get("related_document_ids") or [])
+
+	return document_ids
 
 
 def find_paperless_document_ids_by_checksum(checksum, settings):
@@ -327,6 +414,23 @@ def query_uuid(file_name, settings, origin=None):
 	if file_doc.svan_paperless_uuid:
 		return
 
+	if has_reference_gap(file_doc.attached_to_doctype, settings):
+		# Its document would carry no reference and be detached on its next change.
+		_log(
+			"Warn",
+			title="Not transferred - the reference for the import has no source for this DocType",
+			details=(
+				f"DocType: {file_doc.attached_to_doctype}\nThe file stays 'pending' until the reference "
+				"(SVAN Paperless Settings) has a source field for this DocType."
+			),
+		)
+		return
+
+	version_of = find_version_target(file_doc)
+	if version_of == WAIT_FOR_ORIGINAL:
+		# Stays "pending" without a log entry until the original is synced.
+		return
+
 	if not reserve_file_for_upload(file_name):
 		return
 
@@ -358,10 +462,17 @@ def query_uuid(file_name, settings, origin=None):
 		)
 		return
 
+	if version_of and _upload_version(
+		file_doc, version_of, content, settings, _log, _release_for_retry, origin
+	):
+		return
+	if not version_of and _take_unclaimed_version(file_doc, content, settings, _log):
+		return
+
 	# A document with the same content that no File owns yet (e.g. from an upload whose UUID
 	# was never saved) is adopted instead of uploading again.
 	checksum = hashlib.sha256(content if isinstance(content, bytes) else content.encode()).hexdigest()
-	document_id = find_unclaimed_document_by_checksum(checksum, settings)
+	document_id = find_unclaimed_document_by_checksum(checksum, file_doc, settings)
 	if document_id:
 		outcome = _adopt_existing_document(file_doc, document_id, settings, _log)
 		if outcome == OUTCOME_OK:
@@ -487,6 +598,137 @@ def query_uuid(file_name, settings, origin=None):
 
 		break
 
+	new_uuid = _accepted_upload_uuid(file_doc, response, settings, _log, _release_for_retry)
+	if new_uuid:
+		_touch_mappings_last_synced(tag_ids, correspondent_id, custom_field_values)
+		# post_document/ ignores a version label.
+		remember_sent_names(file_doc, file_doc.file_name, "")
+		save_uuid(file_name, settings, new_uuid, origin=origin)
+
+
+def _upload_version(file_doc, document_id, content, settings, log, release, origin):
+	"""Upload the file as a new version of document_id (see file_versions.py). The
+	document ID is stored right away, the poll job adds the version ID from the task.
+	A version with the same content that no File holds, e.g. added in Paperless NGX
+	and not imported yet, is taken instead; the poll job completes the file.
+
+	Returns False only when that document is gone (HTTP 404): the caller then uploads
+	the file as a document of its own.
+	"""
+	version_id = _unclaimed_version_with_content(file_doc, document_id, content, settings)
+	if version_id:
+		_take_version(file_doc, document_id, version_id, log)
+		return True
+
+	try:
+		response = post_version(file_doc, document_id, content, settings)
+	except Exception:
+		log(
+			"Error",
+			title="Request failed - queued for the next scheduled run",
+			details=frappe.get_traceback(),
+		)
+		release()
+		return True
+
+	log(
+		"Info",
+		title=f"Response: HTTP {response.status_code} (new version of document {document_id})",
+		details=response.text,
+	)
+
+	if response.status_code == 404:
+		log(
+			"Warn",
+			title="Document of the original no longer exists - uploading as a document of its own",
+			details=f"Paperless NGX document ID: {document_id}",
+		)
+		return False
+
+	new_uuid = _accepted_upload_uuid(file_doc, response, settings, log, release)
+	if new_uuid:
+		file_doc.db_set("svan_paperless_document_id", document_id, update_modified=False)
+		remember_sent_names(file_doc, "", file_doc.file_name)
+		save_uuid(file_doc.name, settings, new_uuid, origin=origin)
+	return True
+
+
+def _take_unclaimed_version(file_doc, content, settings, log):
+	"""Take a version with the same content that no File holds from a document of the
+	same business document, e.g. one archived when its file was deleted, instead of
+	uploading a document of its own. Only there: a version of another business
+	document would carry that one's metadata.
+	"""
+	document_ids = set(
+		frappe.get_all(
+			"File",
+			filters={
+				"attached_to_doctype": file_doc.attached_to_doctype,
+				"attached_to_name": file_doc.attached_to_name,
+				"svan_paperless_document_id": ["is", "set"],
+				"name": ["!=", file_doc.name],
+			},
+			pluck="svan_paperless_document_id",
+		)
+	)
+	for document_id in sorted(document_ids):
+		version_id = _unclaimed_version_with_content(file_doc, document_id, content, settings)
+		if version_id:
+			_take_version(file_doc, document_id, version_id, log)
+			return True
+	return False
+
+
+def _take_version(file_doc, document_id, version_id, log):
+	"""The poll completes the file; align_uploaded_file() gives the version its name,
+	which also removes an archive mark.
+	"""
+	file_doc.db_set(
+		{"svan_paperless_document_id": document_id, "svan_paperless_version_id": version_id},
+		update_modified=False,
+	)
+	log(
+		"Info",
+		title="Version already present in Paperless NGX (checksum match) - upload skipped",
+		details=(
+			f"Paperless NGX document ID: {document_id}\nVersion ID: {version_id}\n"
+			"Will be completed on the next run of the sync status job."
+		),
+	)
+
+
+def _unclaimed_version_with_content(file_doc, document_id, content, settings):
+	"""The ID of a version of document_id with this content that no File holds,
+	otherwise None - also on any error, as an upload costs at most a duplicate version.
+	"""
+	try:
+		response = requests.get(
+			settings.api_url.rstrip("/") + f"/documents/{document_id}/",
+			headers={"Authorization": f"Token {settings.get_password('api_token', raise_exception=False)}"},
+			params={"fields": "id,versions"},
+			timeout=settings.api_call_timeout or 30,
+			verify=True,
+		)
+		response.raise_for_status()
+		versions = response.json().get("versions") or []
+	except Exception:
+		return None
+
+	checksum = hashlib.sha256(content if isinstance(content, bytes) else content.encode()).hexdigest()
+	candidates = [str(version["id"]) for version in versions if version.get("checksum") == checksum]
+	if not candidates:
+		return None
+	# The version import could be taking the same version right now.
+	held = held_version_ids(
+		lock_attachments(file_doc.attached_to_doctype, file_doc.attached_to_name), document_id
+	)
+	return next((version_id for version_id in candidates if version_id not in held), None)
+
+
+def _accepted_upload_uuid(file_doc, response, settings, _log, _release_for_retry):
+	"""The task UUID of an accepted upload, otherwise None after handling the rejection."""
+	file_name = file_doc.name
+
 	if response.status_code != 200:
 		log_type = "Error"
 		if response.status_code == 400 and FILE_TYPE_NOT_SUPPORTED_RE.search(response.text):
@@ -518,10 +760,10 @@ def query_uuid(file_name, settings, origin=None):
 			title="Aborted",
 			details="Aborted because of the previous message.",
 		)
-		return
+		return None
 
 	try:
-		new_uuid = response.json()
+		return response.json()
 	except Exception:
 		_log(
 			"Error",
@@ -529,10 +771,7 @@ def query_uuid(file_name, settings, origin=None):
 			details=f"HTTP {response.status_code}\n\n{frappe.get_traceback()}",
 		)
 		_release_for_retry()
-		return
-
-	_touch_mappings_last_synced(tag_ids, correspondent_id, custom_field_values)
-	save_uuid(file_name, settings, new_uuid, origin=origin)
+		return None
 
 
 def _adopt_existing_document(file_doc, document_id, settings, log):
@@ -555,7 +794,11 @@ def _adopt_existing_document(file_doc, document_id, settings, log):
 	if outcome != OUTCOME_OK:
 		return outcome
 
-	file_doc.db_set("svan_paperless_document_id", document_id, update_modified=False)
+	# The checksum lookup only finds a document by its original's content.
+	file_doc.db_set(
+		{"svan_paperless_document_id": document_id, "svan_paperless_version_id": document_id},
+		update_modified=False,
+	)
 	log(
 		"Info",
 		"File already present in Paperless NGX (checksum match) - upload skipped",
@@ -1099,19 +1342,25 @@ def sync_pending_files(enforce_limits=True):
 		frappe.db.commit()
 
 
-def push_metadata_update(file_name, settings):
+def push_metadata_update(file_name, settings, previous_doctype=None):
 	"""Apply tags/correspondent/document type/custom field values of an already
 	"synced" file to the existing Paperless NGX document via PATCH
 	(svan_paperless_document_id) - called from sync_metadata_updates() for every
 	file flagged by change_watch.py (svan_paperless_needs_update = 1).
 
-	On success only svan_paperless_needs_update is reset - no new UUID/document ID
-	is due, the document already exists. An HTTP 404 (the document disappeared from
+	On success, and once the names of files renamed in ERPNext are transferred too
+	(name_sync.push_file_names()), only svan_paperless_needs_update is reset - no new
+	UUID/document ID is due, the document already exists. An HTTP 404 (the document disappeared from
 	Paperless NGX in the meantime, e.g. because paperless_delete.py is running in
 	parallel or it was deleted there manually) marks the file as "broken" instead -
-	another attempt would be pointless, and the flag is reset as well. Any other
+	another attempt would be pointless, and the flag is reset as well;
+	paperless_compare.py then deletes the file. Any other
 	failure keeps the flag, so the next run tries again. See _patch_document_metadata()
 	for the request itself.
+
+	previous_doctype: the DocType a moved file was attached to before
+	(document_relink.py); custom fields only it had a source for are cleared too.
+	Returns the outcome of _patch_document_metadata(), or None without document.
 	"""
 	file_doc = frappe.get_doc("File", file_name)
 
@@ -1127,13 +1376,17 @@ def push_metadata_update(file_name, settings):
 			title="No Paperless NGX document linked - update skipped",
 			details="svan_paperless_document_id is empty; the flag was reset anyway.",
 		)
-		return
+		return None
 
 	outcome = _patch_document_metadata(
-		file_doc, file_doc.svan_paperless_document_id, settings, "push_metadata_update"
+		file_doc,
+		file_doc.svan_paperless_document_id,
+		settings,
+		"push_metadata_update",
+		previous_doctype=previous_doctype,
 	)
 
-	if outcome == OUTCOME_OK:
+	if outcome == OUTCOME_OK and push_file_names(file_doc.svan_paperless_document_id, settings):
 		frappe.db.set_value("File", file_name, "svan_paperless_needs_update", 0, update_modified=False)
 	elif outcome == OUTCOME_GONE:
 		frappe.db.set_value(
@@ -1149,9 +1402,10 @@ def push_metadata_update(file_name, settings):
 			"push_metadata_update",
 			title="Document no longer exists in Paperless NGX - marked as 'broken'",
 		)
+	return outcome
 
 
-def _patch_document_metadata(file_doc, document_id, settings, source):
+def _patch_document_metadata(file_doc, document_id, settings, source, previous_doctype=None):
 	"""PATCH tags/correspondent/document type/custom field values of the File's
 	business document onto the existing Paperless NGX document.
 
@@ -1170,7 +1424,7 @@ def _patch_document_metadata(file_doc, document_id, settings, source):
 	(get_owned_paperless_custom_field_ids_for_document()) and then extended by our
 	own freshly resolved values - an owned ID without a current value (its source
 	field was cleared) is deliberately NOT reinserted, which removes the value in
-	Paperless NGX in line with the forward deletion rule (see AGENTS.md).
+	Paperless NGX: a value cleared in ERPNext is cleared there too.
 
 	source is the function name for the sync log. Returns OUTCOME_OK, OUTCOME_GONE
 	(HTTP 404: the document does not exist any more) or RETRY (transient failure,
@@ -1189,6 +1443,8 @@ def _patch_document_metadata(file_doc, document_id, settings, source):
 		owned_custom_field_ids = get_owned_paperless_custom_field_ids_for_document(
 			file_doc.attached_to_doctype
 		)
+		if previous_doctype:
+			owned_custom_field_ids |= get_owned_paperless_custom_field_ids_for_document(previous_doctype)
 		get_response = requests.get(
 			url, headers=headers, timeout=settings.api_call_timeout or 30, verify=True
 		)
@@ -1317,16 +1573,28 @@ def sync_metadata_updates(enforce_limits=True):
 	except Exception:
 		return
 
-	file_names = frappe.get_all(
+	files = frappe.get_all(
 		"File",
-		filters={"svan_paperless_sync_status": "synced", "svan_paperless_needs_update": 1},
-		pluck="name",
+		filters={
+			"svan_paperless_sync_status": "synced",
+			"svan_paperless_needs_update": 1,
+			# A DocType removed from the whitelist keeps its flags until it is added again.
+			"attached_to_doctype": whitelisted_filter(settings),
+		},
+		fields=["name", "svan_paperless_document_id"],
 		order_by="modified asc",
 	)
 
 	max_runtime_seconds = settings.max_runtime_seconds or 240
+	pushed_document_ids = set()
 
-	for file_name in file_names:
+	for file_name, document_id in ((f.name, f.svan_paperless_document_id) for f in files):
+		if document_id in pushed_document_ids:
+			# Versions of one document share the business document and thus its metadata.
+			frappe.db.set_value("File", file_name, "svan_paperless_needs_update", 0, update_modified=False)
+			frappe.db.commit()
+			continue
+
 		if enforce_limits and time.monotonic() - start_time > max_runtime_seconds:
 			log_sync_event(
 				None,
@@ -1340,6 +1608,7 @@ def sync_metadata_updates(enforce_limits=True):
 
 		try:
 			push_metadata_update(file_name, settings)
+			pushed_document_ids.add(document_id)
 		except Exception:
 			log_sync_event(
 				file_name,
@@ -1397,7 +1666,7 @@ def reconcile_metadata_changes(enforce_limits=True):
 	   nothing about values already synced.
 
 	Only bidirectional rows are checked: for a row with bidirectional=0, "changes in
-	Paperless NGX do not affect ERPNext" applies here as well (see AGENTS.md).
+	Paperless NGX do not affect ERPNext" applies here as well.
 	A shared runtime limit (settings.max_runtime_seconds) applies across ALL THREE
 	phases - if it is already reached during an earlier phase, the next phase is not
 	started in this run at all.
@@ -1686,7 +1955,10 @@ def _remove_tag_from_affected_documents(mapping, settings):
 		for row in frappe.get_all(
 			"File",
 			filters={
-				"attached_to_doctype": ["in", list({row.document_type for row in tagged})],
+				"attached_to_doctype": [
+					"in",
+					list({row.document_type for row in tagged} & whitelisted_doctypes(settings)) or [""],
+				],
 				"attached_to_name": ["in", list({row.document_name for row in tagged})],
 				"svan_paperless_document_id": ["is", "set"],
 			},
@@ -1865,7 +2137,10 @@ def _clear_custom_field_from_affected_documents(mapping, settings):
 		for row in frappe.get_all(
 			"File",
 			filters={
-				"attached_to_doctype": ["in", list({c[0] for c in candidates})],
+				"attached_to_doctype": [
+					"in",
+					list({c[0] for c in candidates} & whitelisted_doctypes(settings)) or [""],
+				],
 				"attached_to_name": ["in", list({c[1] for c in candidates})],
 				"svan_paperless_document_id": ["is", "set"],
 			},
@@ -2080,6 +2355,7 @@ def _queue_for_new_upload(file_doc):
 		{
 			"svan_paperless_uuid": "",
 			"svan_paperless_document_id": "",
+			"svan_paperless_version_id": "",
 			"svan_paperless_sync_status": "pending",
 		},
 		update_modified=False,
@@ -2097,18 +2373,18 @@ def finalize_sync(file_doc, settings, delete_physical_file=None):
 	retroactively_delete_physical_file(), which uses it to switch a single, already
 	"synced" file to "deleted" retroactively without regard to the global setting):
 
-	- Enabled: the physical file in ERPNext is deleted and file_url switched to the
+	- Enabled (the default): the physical file in ERPNext is deleted and file_url switched to the
 	  internal preview route (see get_preview_url() in preview.py) - that route
 	  streams the document content server-side from Paperless NGX through the API
 	  token on demand. The File RECORD itself is kept, only the locally stored file
 	  content is removed.
-	- Disabled (the default, the previous behaviour): the physical file stays
+	- Disabled: the physical file stays
 	  untouched and file_url still points at the local file - there is nothing else
 	  to do besides setting the sync status.
 
-	file_doc._delete_file_on_disk() respects Frappe's own deduplication by
-	content_hash: if several File records share the same physical file content, only
-	the thumbnail is deleted rather than the content itself. As soon as
+	_delete_content_on_disk() keeps a physical file another File still points at
+	(Frappe reuses the path of a file with the same content), otherwise it is
+	deleted. As soon as
 	file_doc.file_url points at the internal preview route (prefix "/api/method/"),
 	Frappe automatically treats the file as a remote file (is_remote_file, see
 	URL_PREFIXES in frappe/core/doctype/file/file.py) - the same branch that files
@@ -2127,7 +2403,7 @@ def finalize_sync(file_doc, settings, delete_physical_file=None):
 
 	if delete_physical_file:
 		try:
-			file_doc._delete_file_on_disk()
+			_delete_content_on_disk(file_doc)
 		except Exception:
 			log_sync_event(
 				file_doc.name,
@@ -2173,7 +2449,17 @@ def finalize_sync(file_doc, settings, delete_physical_file=None):
 			return
 
 
-def _document_still_exists(file_name, document_id, settings):
+def _delete_content_on_disk(file_doc):
+	"""Frappe's _delete_file_on_disk() keeps the content while any other File has the
+	same content_hash. An offloaded file keeps its hash (file_events.keep_content_hash)
+	but no longer uses the path, so the content would stay on disk for good, and a
+	later file of that name would get a suffix. Only files sharing the path count.
+	"""
+	shared = frappe.db.exists("File", {"file_url": file_doc.file_url, "name": ["!=", file_doc.name]})
+	file_doc.delete_file_data_content(only_thumbnail=bool(shared))
+
+
+def _document_still_exists(file_name, document_id, settings, version_id=None):
 	"""Check through the service token whether a Paperless NGX document still
 	exists - called from process_syncing_file() immediately before finalize_sync()
 	to detect a race between a successful upload task and a deletion in Paperless
@@ -2208,17 +2494,24 @@ def _document_still_exists(file_name, document_id, settings):
 		)
 		return True
 
-	return response.status_code != 404
+	if response.status_code == 404:
+		return False
+	if not version_id or str(version_id) == str(document_id) or response.status_code != 200:
+		return True
+	try:
+		return any(str(v.get("id")) == str(version_id) for v in response.json().get("versions") or [])
+	except Exception:
+		return True
 
 
 def process_syncing_file(file_name, settings):
 	"""Process a single "syncing" file: queries the Paperless NGX task status if
 	needed and completes the sync afterwards. Called from poll_syncing_files().
 
-	If svan_paperless_document_id is already set, a previous finalize_sync() call
-	had failed (e.g. a save error after MAX_SAVE_ATTEMPTS) - the task query is then
-	skipped and the already known document ID used directly, as another task query
-	would return nothing new.
+	If svan_paperless_version_id is already set, the task result is known (a
+	previous finalize_sync() call had failed, e.g. a save error after
+	MAX_SAVE_ATTEMPTS) - the task query is then skipped, as another one would return
+	nothing new. See _store_task_result() otherwise.
 
 	A document ID that another File already owns is never taken over: another File
 	adopted the document in between (see _adopt_existing_document()), so this file
@@ -2230,17 +2523,12 @@ def process_syncing_file(file_name, settings):
 	"""
 	file_doc = frappe.get_doc("File", file_name)
 
-	if not file_doc.svan_paperless_document_id:
-		document_id = query_task_status(file_doc, settings)
-		if not document_id:
+	if not file_doc.svan_paperless_version_id:
+		if not _store_task_result(file_doc, settings):
 			return
-		if is_document_id_held_by_other_file(document_id, file_name):
-			_requeue_for_own_document(file_doc, document_id, settings)
-			return
-		file_doc.db_set("svan_paperless_document_id", document_id, update_modified=False)
 
 	document_id = file_doc.svan_paperless_document_id
-	if not _document_still_exists(file_name, document_id, settings):
+	if not _document_still_exists(file_name, document_id, settings, file_doc.svan_paperless_version_id):
 		_queue_for_new_upload(file_doc)
 		log_sync_event(
 			file_name,
@@ -2252,7 +2540,42 @@ def process_syncing_file(file_name, settings):
 		)
 		return
 
+	changed_in_paperless = align_uploaded_file(file_doc, settings)
 	finalize_sync(file_doc, settings)
+	if changed_in_paperless:
+		apply_paperless_names(changed_in_paperless, settings, "process_syncing_file")
+
+
+def _store_task_result(file_doc, settings):
+	"""Store what the upload task created: a new document (document and version ID
+	are the same) or, for a version upload, the version of the document stored at
+	upload time. Files from before versioning may have the document ID already and
+	get the same ID as version. Returns False while there is nothing to finalize yet.
+	"""
+	if not file_doc.svan_paperless_uuid:
+		# Adopted by checksum before the version ID existed.
+		file_doc.db_set(
+			"svan_paperless_version_id", file_doc.svan_paperless_document_id, update_modified=False
+		)
+		return True
+
+	created_id = query_task_status(file_doc, settings)
+	if not created_id:
+		return False
+
+	if file_doc.svan_paperless_document_id:
+		file_doc.db_set("svan_paperless_version_id", created_id, update_modified=False)
+		return True
+
+	if is_document_id_held_by_other_file(created_id, file_doc.name):
+		_requeue_for_own_document(file_doc, created_id, settings)
+		return False
+
+	file_doc.db_set(
+		{"svan_paperless_document_id": created_id, "svan_paperless_version_id": created_id},
+		update_modified=False,
+	)
+	return True
 
 
 def _requeue_for_own_document(file_doc, document_id, settings):
@@ -2302,7 +2625,11 @@ def poll_syncing_files(enforce_limits=True):
 
 	file_names = frappe.get_all(
 		"File",
-		filters={"svan_paperless_sync_status": "syncing", "is_folder": 0},
+		filters={
+			"svan_paperless_sync_status": "syncing",
+			"attached_to_doctype": whitelisted_filter(settings),
+			"is_folder": 0,
+		},
 		pluck="name",
 		order_by="creation asc",
 	)
@@ -2383,6 +2710,7 @@ def retroactively_delete_physical_files():
 		filters={
 			"svan_paperless_sync_status": "synced",
 			"file_url": ["not like", f"/api/method/{PREVIEW_METHOD_PATH}%"],
+			"attached_to_doctype": whitelisted_filter(settings),
 			"is_folder": 0,
 		},
 		pluck="name",
@@ -2449,7 +2777,7 @@ def trigger_manual_poll():
 	Paperless Settings.
 
 	Runs as a background job, analogous to trigger_manual_sync(): up to two API
-	calls (task status, share link) with up to settings.api_call_timeout seconds
+	calls (task status, document check) with up to settings.api_call_timeout seconds
 	each can occur per file. Deliberately calls with enforce_limits=False: the
 	runtime limit of poll_syncing_files() only applies to the automatic scheduled
 	job - the manual button is meant to do exactly "process all 'syncing' files now"
@@ -2545,6 +2873,7 @@ def reset_broken_files():
 		SET svan_paperless_sync_status = '',
 		    svan_paperless_uuid = '',
 		    svan_paperless_document_id = '',
+		    svan_paperless_version_id = '',
 		    svan_paperless_needs_update = 0,
 		    svan_paperless_config_version_checked = 0
 		WHERE svan_paperless_sync_status = 'broken'

@@ -9,6 +9,10 @@ from svan_paperless_bridge.svan_paperless_ngx_bridge.doctype.svan_paperless_cust
 	validate_source_doctype,
 	validate_source_fieldname,
 )
+from svan_paperless_bridge.svan_paperless_ngx_bridge.doctype.svan_paperless_settings.svan_paperless_settings import (
+	is_import_reference,
+	show_reference_not_bidirectional_alert,
+)
 
 
 class SVANPaperlessCustomFieldMapping(Document):
@@ -16,10 +20,12 @@ class SVANPaperlessCustomFieldMapping(Document):
 		self.validate_unique_paperless_custom_field_id()
 		self.validate_field_sources()
 		self.disable_bidirectional_for_link_targets()
+		self.disable_bidirectional_for_import_reference()
 		self.update_field_sources_count()
 
 	def on_update(self):
 		self.invalidate_watched_doctype_map_cache()
+		self.apply_reference_source_change()
 
 	def on_trash(self):
 		self.invalidate_watched_doctype_map_cache()
@@ -34,6 +40,21 @@ class SVANPaperlessCustomFieldMapping(Document):
 		from svan_paperless_bridge.change_watch import invalidate_watched_doctype_map_cache
 
 		invalidate_watched_doctype_map_cache()
+
+	def apply_reference_source_change(self):
+		"""Changed sources of the import reference mean other reference values in
+		Paperless NGX and other DocTypes to import into (see reference_config.py). A
+		rename of the custom field alone only renames it there.
+		"""
+		from svan_paperless_bridge.reference_config import (
+			flag_files_for_reference_backfill,
+			restart_import_scan,
+			sources_changed_on_mapping,
+		)
+
+		if sources_changed_on_mapping(self):
+			flag_files_for_reference_backfill(self.name)
+			restart_import_scan()
 
 	def validate_field_sources(self):
 		"""Validate source_fieldname of every source field row and allow each source
@@ -88,6 +109,14 @@ class SVANPaperlessCustomFieldMapping(Document):
 						indicator="orange",
 					)
 				return
+
+	def disable_bidirectional_for_import_reference(self):
+		"""The reference of the file import identifies the business document and is
+		never synced back.
+		"""
+		if self.bidirectional and is_import_reference(self.name):
+			self.bidirectional = 0
+			show_reference_not_bidirectional_alert()
 
 	def update_field_sources_count(self):
 		"""Keep field_sources_count in sync with the number of rows in

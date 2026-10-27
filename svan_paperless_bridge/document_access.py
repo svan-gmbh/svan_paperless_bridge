@@ -52,7 +52,7 @@ def has_paperless_document_access(file_doc, settings):
 
 	Sequence:
 	1. If SVAN Paperless Settings.enforce_document_permissions is disabled
-	   (the default/opt-in), the check is skipped - True.
+	   (enabled by default), the check is skipped - True.
 	2. If the logged-in user has no Paperless NGX API token of their own, access
 	   is denied - False.
 	3. If a token exists, the document detail endpoint is queried EXPLICITLY WITH

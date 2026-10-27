@@ -11,7 +11,18 @@ frappe.ui.form.on("SVAN Paperless Settings", {
 		}));
 	},
 
+	before_save(frm) {
+		return svan_paperless
+			.confirm_reference_change(frm)
+			.then(() => frappe.validated !== false && confirm_archive_off(frm));
+	},
+
 	refresh(frm) {
+		frm.__saved_archive_deleted_files = frm.doc.archive_deleted_files;
+		// Same as for the personal token in user.js. Frappe's strength check also
+		// fails with "Integer exceeds 64-bit range" on a token of this length.
+		frm.get_field("api_token").disable_password_checks();
+
 		frm.add_custom_button(
 			__("Transfer New Files"),
 			() => {
@@ -78,6 +89,60 @@ frappe.ui.form.on("SVAN Paperless Settings", {
 				});
 			},
 			__("Sync")
+		);
+
+		frm.add_custom_button(
+			__("Compare With Paperless NGX Now"),
+			() => {
+				throw_if_dirty(frm);
+				frappe.call({
+					method: "svan_paperless_bridge.paperless_compare.trigger_manual_compare",
+					callback: () => {
+						frappe.show_alert({
+							message: __("The comparison has been started in the background."),
+							indicator: "green",
+						});
+					},
+				});
+			},
+			__("Sync")
+		);
+
+		frm.add_custom_button(
+			__("Import From Paperless NGX Now"),
+			() => {
+				throw_if_dirty(frm);
+				frappe.call({
+					method: "svan_paperless_bridge.paperless_import.trigger_manual_import",
+					callback: () => {
+						frappe.show_alert({
+							message: __("The import has been started in the background."),
+							indicator: "green",
+						});
+					},
+				});
+			},
+			__("Sync")
+		);
+
+		frm.add_custom_button(
+			__("Reset Import Queue"),
+			() => {
+				throw_if_dirty(frm);
+				frappe.call({
+					method: "svan_paperless_bridge.paperless_import.reset_import_queue",
+					callback: (r) => {
+						const count = r.message || 0;
+						frappe.show_alert({
+							message: count
+								? __("{0} import(s) reset.", [count])
+								: __("No stopped imports found."),
+							indicator: count ? "green" : "orange",
+						});
+					},
+				});
+			},
+			__("Maintenance")
 		);
 
 		frm.add_custom_button(
@@ -254,4 +319,23 @@ function throw_if_dirty(frm) {
 	if (frm.is_dirty()) {
 		frappe.throw(__("Please save your changes."));
 	}
+}
+
+// Switching the archive off brings nothing back by itself; it changes what deleting does.
+function confirm_archive_off(frm) {
+	if (!frm.__saved_archive_deleted_files || frm.doc.archive_deleted_files) return;
+	return new Promise((resolve) => {
+		frappe.confirm(
+			__(
+				"From now on, deleting a file also deletes it in Paperless NGX. Archived documents come back when they are changed in Paperless NGX and qualify for the import."
+			),
+			() => resolve(),
+			() => {
+				frappe.validated = false;
+				resolve();
+			},
+			__("Save Anyway"),
+			__("Cancel")
+		);
+	});
 }

@@ -13,7 +13,9 @@
   "reference_file",
   "section_break_1",
   "title",
-  "details"
+  "details",
+  "context_section",
+  "context"
  ],
  "fields": [
   {
@@ -75,12 +77,25 @@
    "fieldtype": "Code",
    "label": "Details",
    "read_only": 1
+  },
+  {
+   "collapsible": 1,
+   "fieldname": "context_section",
+   "fieldtype": "Section Break",
+   "label": "Context"
+  },
+  {
+   "description": "State of the file, its business document and the mapping when the entry was written.",
+   "fieldname": "context",
+   "fieldtype": "JSON",
+   "label": "Context",
+   "read_only": 1
   }
  ],
  "in_create": 0,
  "index_web_pages_for_search": 0,
  "links": [],
- "modified": "2026-08-25 00:00:00.000000",
+ "modified": "2026-10-08 12:00:00.000000",
  "modified_by": "Administrator",
  "module": "SVAN Paperless NGX Bridge",
  "name": "SVAN Paperless Sync Log",

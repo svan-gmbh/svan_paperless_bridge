@@ -2,10 +2,14 @@
 # License: gpl-3.0
 
 import frappe
+from frappe import _
 from frappe.model import no_value_fields
 
+# The ID of a document is no field in its meta, but a valid source (e.g. the order number).
+ID_FIELDNAME = "name"
 
-def get_value_field_options(doctype, txt=None, fieldtypes=None):
+
+def get_value_field_options(doctype, txt=None, fieldtypes=None, include_id=False):
 	"""Return suggestions for an autocomplete field that expects a technical
 	fieldname on a DocType the user picked beforehand - e.g. "Party Fieldname"
 	(svan_paperless_whitelisted_doctype.py) or "Source Fieldname"
@@ -29,6 +33,9 @@ def get_value_field_options(doctype, txt=None, fieldtypes=None):
 
 	txt = (txt or "").strip().lower()
 	options = []
+	id_label = _("ID")
+	if include_id and (not txt or txt in ID_FIELDNAME or txt in id_label.lower()):
+		options.append({"value": ID_FIELDNAME, "label": f"{id_label} ({ID_FIELDNAME})"})
 	for field in frappe.get_meta(doctype).fields:
 		if field.fieldtype in no_value_fields:
 			continue
@@ -41,3 +48,11 @@ def get_value_field_options(doctype, txt=None, fieldtypes=None):
 		)
 
 	return options
+
+
+def is_value_field(meta, fieldname):
+	"""True for the ID and for fields holding a value of their own."""
+	if fieldname == ID_FIELDNAME:
+		return True
+	field = meta.get_field(fieldname)
+	return bool(field) and field.fieldtype not in no_value_fields

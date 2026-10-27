@@ -16,10 +16,17 @@
   "whitelisted_file_types",
   "nachbearbeitung_section",
   "delete_physical_file",
+  "archive_section",
+  "archive_deleted_files",
   "vorschau_section",
   "enforce_document_permissions",
   "webhook_section",
   "webhook_secret",
+  "import_section",
+  "import_reference_mapping",
+  "import_tag",
+  "max_import_attempts",
+  "import_scan_watermark",
   "laufzeit_section",
   "api_call_timeout",
   "max_runtime_seconds",
@@ -103,10 +110,22 @@
   },
   {
    "default": "1",
-   "description": "Once the transfer has finished, deletes the physical file and points the file URL at an internal preview route that fetches the content server-side on demand. The File document itself is kept; only the local file content is removed.",
+   "description": "Once a file has been transferred, deletes its local content and points the file URL at an internal preview route that fetches the content from Paperless NGX on demand. Applies to files imported from Paperless NGX as well: without this option their content is downloaded. The File document itself is always kept.",
    "fieldname": "delete_physical_file",
    "fieldtype": "Check",
-   "label": "Delete Physical File After Transfer"
+   "label": "Keep File Content Only In Paperless NGX"
+  },
+  {
+   "fieldname": "archive_section",
+   "fieldtype": "Section Break",
+   "label": "Deleting Files"
+  },
+  {
+   "default": "1",
+   "description": "Deleting a file in ERPNext never deletes anything in Paperless NGX. Instead \" (archived)\" is added to the version label of the file there, and to the title of the document once its last file is deleted. Paperless NGX documents and versions marked so are not imported again. Without this option, deleting a file deletes its document or version in Paperless NGX as well.",
+   "fieldname": "archive_deleted_files",
+   "fieldtype": "Check",
+   "label": "Archive Instead Of Deleting"
   },
   {
    "fieldname": "vorschau_section",
@@ -121,7 +140,7 @@
    "label": "Enforce Paperless NGX Document Permissions On Preview"
   },
   {
-   "description": "Create the workflow for this manually in Paperless NGX:<ul><li><b>Trigger type</b>: \"Document Updated\"</li><li><b>Action type</b>: \"Webhook\"</li><li><b>Webhook URL</b> (example): <code>https://erp.example.com/api/method/svan_paperless_bridge.webhook_sync.receive_update</code></li><li><b>Use parameters for webhook body</b>: NOT set</li><li><b>Send webhook payload as JSON</b>: set</li><li><b>Webhook body</b>: <code>{\"document_id\": {{ doc_id }}}</code></li><li><b>Webhook header</b>: <code>Webhook-Secret</code> = the value from the \"Webhook Secret\" field below</li></ul>",
+   "description": "Create the workflow for this manually in Paperless NGX:<ul><li><b>Trigger type</b>: \"Document Updated\"</li><li><b>Action type</b>: \"Webhook\"</li><li><b>Webhook URL</b> (example): <code>https://erp.example.com/api/method/svan_paperless_bridge.webhook_sync.receive_update</code></li><li><b>Use parameters for webhook body</b>: NOT set</li><li><b>Send webhook payload as JSON</b>: NOT set</li><li><b>Webhook body</b>: <code>{\"document_id\": {{ doc_id }}}</code></li><li><b>Webhook headers</b>: <code>Webhook-Secret</code> = the value from the \"Webhook Secret\" field below, and <code>Content-Type</code> = <code>application/json</code></li><li><b>Include document</b>: NOT set</li></ul>",
    "fieldname": "webhook_section",
    "fieldtype": "Section Break",
    "label": "Feedback From Paperless NGX (Webhook)"
@@ -163,12 +182,50 @@
    "hidden": 1,
    "label": "Maximum Files Per Run",
    "non_negative": 1
+  },
+  {
+   "description": "Files created in Paperless NGX with a whitelisted document type and a value in the reference are attached to the matching business document. A later change of the document type or reference in Paperless NGX moves the file to the matching business document, or removes it from ERPNext if none matches. Checked on every update reported by the webhook and once a day.",
+   "fieldname": "import_section",
+   "fieldtype": "Section Break",
+   "label": "File Import From Paperless NGX"
+  },
+  {
+   "default": "10",
+   "depends_on": "import_reference_mapping",
+   "description": "How often a file is retried (once per import run) while no business document matches its reference. A later change of the file in Paperless NGX starts the attempts over.",
+   "fieldname": "max_import_attempts",
+   "fieldtype": "Int",
+   "label": "Attempts While No Business Document Is Found",
+   "non_negative": 1
+  },
+  {
+   "description": "Highest \"modified\" timestamp of Paperless NGX seen by the last import scan; the next scan only looks at files changed after it. Empty: full scan.",
+   "fieldname": "import_scan_watermark",
+   "fieldtype": "Data",
+   "hidden": 1,
+   "label": "Import Scan Watermark",
+   "read_only": 1
+  },
+  {
+   "description": "Optional. The custom field mapping whose value identifies the business document of a file created in Paperless NGX (e.g. the source \"ID (name)\"). Files are imported for every whitelisted DocType this mapping has a source on. The value is never written back from Paperless NGX, so the mapping stays without \"Bidirectional\".",
+   "fieldname": "import_reference_mapping",
+   "fieldtype": "Link",
+   "label": "Reference For Import",
+   "options": "SVAN Paperless Custom Field Mapping"
+  },
+  {
+   "depends_on": "import_reference_mapping",
+   "description": "Optional. Only files carrying this tag in Paperless NGX are imported. It is not added to the business document, so it disappears from the file after the import.",
+   "fieldname": "import_tag",
+   "fieldtype": "Link",
+   "label": "Import Tag",
+   "options": "Tag"
   }
  ],
  "index_web_pages_for_search": 0,
  "issingle": 1,
  "links": [],
- "modified": "2026-10-05 15:40:00.000000",
+ "modified": "2026-10-27 15:00:00.000000",
  "modified_by": "Administrator",
  "module": "SVAN Paperless NGX Bridge",
  "name": "SVAN Paperless Settings",
