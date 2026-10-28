@@ -30,9 +30,11 @@ Gut zu wissen: Frappes Anhangliste zeigt Anhänge gleichen Namens nur einmal (de
 
 ## Installation
 
+Nimm den Branch zu deiner Frappe-Hauptversion: `version-16` für Frappe v16 (`staging-16` enthält den nächsten Stand, bevor er in `version-16` ankommt).
+
 ```bash
 cd $PFAD_ZU_DEINER_BENCH
-bench get-app $URL_DIESES_REPOS --branch development
+bench get-app $URL_DIESES_REPOS --branch version-16
 bench --site $SITE install-app svan_paperless_bridge
 ```
 
@@ -42,20 +44,20 @@ Die Installation legt Zusatzfelder an Datei (File) und Benutzer (User) an und f�
 
 Öffne **Paperless NGX > Einstellungen** (siehe [Wo du was findest](#wo-du-was-findest)):
 
-1. **Grundlagen:** API URL, API Token und einen Standard-Korrespondenten. Beim Speichern wird die Verbindung getestet und geprüft, ob das Token einem Superuser gehört.
+1. **Grundlagen:** API URL, API Token und einen Standard-Korrespondenten (wird in Paperless NGX angelegt, falls es ihn nicht gibt). Beim Speichern wird die Verbindung getestet; gehört das Token keinem Superuser, erscheint eine Warnung.
 2. **DocType-Whitelist:** die DocTypes, deren Anhänge abgeglichen werden. Je Zeile:
    - *Paperless Dokumententyp-Name*, vorbelegt mit dem Namen des DocTypes.
-   - Optional der *Partei-Feldname*, also das Feld mit der Partei (z. B. `customer`). Die Partei wird zum Korrespondenten. Auch ein Dynamic Link geht, z. B. `party_name` am Angebot.
+   - Optional der *Partei-Feldname*, also das Feld mit der Partei (z. B. `customer`). Die Partei wird zum Korrespondenten. Auch ein Dynamic Link geht, z. B. `party_name` am Angebot. Ohne Partei-Feld gilt der Standard-Korrespondent.
 
    Eine leere Whitelist gleicht nichts ab.
 3. **Dateityp-Whitelist:** vorbelegt mit den Typen, die Paperless NGX von Haus aus verarbeitet. Eine leere Liste gleicht nichts ab.
 4. **Nach der Übertragung / Löschen von Dateien / Vorschau-Zugriffskontrolle:**
    - ob der Inhalt nur in Paperless NGX vorgehalten wird (Standard: an),
    - ob Löschen stattdessen archiviert (Standard: an),
-   - ob die Vorschau die Dokumentberechtigungen von Paperless NGX prüft. Dafür hinterlegt jeder Benutzer ein persönliches API-Token in seinem Benutzer-Formular (Abschnitt *SVAN Paperless NGX*).
+   - ob die Vorschau die Dokumentberechtigungen von Paperless NGX prüft (Standard: an). Dafür hinterlegt jeder Benutzer ein persönliches API-Token in seinem Benutzer-Formular (Abschnitt *SVAN Paperless NGX*).
 5. **Zusatzfelder (optional):** Unter **Mapping > Zusatzfelder** legst du fest, welche ERPNext-Felder welches Paperless-NGX-Zusatzfeld befüllen. Ein Zusatzfeld kann aus mehreren DocTypes gespeist werden. Auch die ID (`name`) des Datensatzes kann Quelle sein.
-6. **Rückmeldung von Paperless NGX (optional, empfohlen):** Klicke im Abschnitt *Rückmeldung von Paperless NGX (Webhook)* auf *Secret erzeugen*. Lege danach in Paperless NGX einen Workflow mit dem Auslöser *Document Updated* und einer Webhook-Aktion an, mit den Werten aus dem Hilfetext dieses Abschnitts. Ohne den Webhook erfährt ERPNext nur von Löschungen, neuen Versionen und umbenannten Schlagworten, Zusatzfeldern oder Korrespondenten. Änderungen an den Metadaten eines einzelnen Dokuments kommen dann nicht zurück.
-7. **Dateiimport (optional):** Wähle im Abschnitt *Dateiimport aus Paperless NGX* eine Zusatzfeld-Zuordnung als *Referenz für den Import*. Optional kommt ein *Import-Schlagwort* hinzu, das ein Dokument tragen muss. Jeder DocType der Whitelist braucht eine Quelle in dieser Zuordnung. Solange die Referenz gesetzt ist, werden Dateien eines DocTypes ohne Quelle nicht übertragen. Beim Speichern warnt ein Dialog vor solchen Lücken und vor Dateien, deren Referenz erst an Paperless NGX gehen muss.
+6. **Rückmeldung von Paperless NGX (optional, empfohlen):** Klicke im Abschnitt *Rückmeldung von Paperless NGX (Webhook)* auf *Secret erzeugen*. Lege danach in Paperless NGX einen Workflow mit dem Auslöser *Document Updated* und einer Webhook-Aktion an, mit den Werten aus dem Hilfetext dieses Abschnitts. Ohne den Webhook erfährt ERPNext von Änderungen in Paperless NGX nur über den zeitgesteuerten Abgleich (gelöschte Dokumente und Versionen, neue Versionen, Titel und Bezeichnungen, gelöschte oder umbenannte Schlagworte, Zusatzfelder und Korrespondenten) und den täglichen Import. Schlagworte, Korrespondent und Zusatzfeld-Werte eines einzelnen Dokuments kommen dann nicht zurück.
+7. **Dateiimport (optional):** Wähle im Abschnitt *Dateiimport aus Paperless NGX* eine Zusatzfeld-Zuordnung als *Referenz für den Import*. Optional kommt ein *Import-Schlagwort* hinzu, das ein Dokument tragen muss. Jeder DocType der Whitelist braucht eine Quelle in dieser Zuordnung. Solange die Referenz gesetzt ist, werden Dateien eines DocTypes ohne Quelle nicht übertragen. Beim Speichern warnt ein Dialog vor solchen Lücken und vor Dateien, deren Referenz erst an Paperless NGX gehen muss. *Versuche, solange kein Business-Dokument gefunden wird* (Standard 10) begrenzt, wie oft ein Dokument ohne passenden Datensatz erneut versucht wird.
 
 Ab dann arbeiten zeitgesteuerte Aufträge, siehe [Wann übertragen wird](#wann-übertragen-wird). Die Schaltflächengruppen *Synchronisation* und *Wartung* in den Einstellungen starten einzelne Schritte von Hand.
 
@@ -75,7 +77,7 @@ Einstellungen und Listen liegen in der Seitenleiste **Paperless NGX**. So kommst
 | **Einstellungen** | Verbindung, Whitelists, Optionen, Webhook, Import, Schaltflächen für manuelle Läufe |
 | **Dateityp** | Bekannte Dateitypen und ihre MIME-Typen |
 | **Mapping > Schlagworte / Zusatzfelder / Korrespondenten** | Welches ERPNext-Schlagwort, -Feld bzw. welche Partei welchem Eintrag in Paperless NGX entspricht, und der Schalter *Bidirektional* je Zeile. Schlagwort- und Korrespondenten-Zuordnungen entstehen automatisch, Zusatzfeld-Zuordnungen von Hand. |
-| **Sync Log** | Jeder Übertragungsvorgang und jeder Fehler; *Aktionen > Als JSON exportieren* lädt die ausgewählten Einträge herunter |
+| **Sync Log** | Jeder Übertragungsvorgang und jeder Fehler; *Aktionen > Als JSON exportieren* lädt die ausgewählten Einträge herunter. Einträge älter als 90 Tage entfernt Frappes Log-Bereinigung. |
 | **Datei**-Formular | Feld *Sync-Status*, Seitenbereich *Dubletten*. Die Vorschau funktioniert wie zuvor, auch wenn der Inhalt aus Paperless NGX kommt. |
 | **Benutzer**-Formular | Abschnitt *SVAN Paperless NGX*: persönliches API-Token |
 
@@ -84,7 +86,7 @@ Sync-Status einer Datei: leer = wird nicht abgeglichen, `pending` = wartet, `syn
 <details>
 <summary><b>Schaltflächen in den Einstellungen</b></summary>
 
-Nur für System-Manager. Bis auf *Import-Warteschlange zurücksetzen* und *Broken zurücksetzen* startet jede Schaltfläche einen Hintergrundauftrag und kehrt sofort zurück. Ergebnisse stehen im **Sync Log**.
+Nur für System-Manager und nur bei gespeicherten Einstellungen. Bis auf *Import-Warteschlange zurücksetzen* und *Broken zurücksetzen* startet jede Schaltfläche einen Hintergrundauftrag und kehrt sofort zurück. Ergebnisse stehen im **Sync Log**.
 
 **Synchronisation** (die zeitgesteuerten Schritte, sofort und ohne deren Zeit- und Mengenbegrenzung):
 
@@ -143,12 +145,13 @@ Die zeitgesteuerten Aufträge laufen alle fünf Minuten, der Import einmal tägl
 ## Aktualisieren
 
 1. Sicherung inklusive Dateien anlegen. Liegt der Inhalt nur in Paperless NGX, auch Paperless NGX sichern.
-2. Neue Version holen und `bench --site $SITE migrate` ausführen. Das aktualisiert auch die Zusatzfelder und die zeitgesteuerten Aufträge.
-3. Bench neu starten (`bench restart`).
+2. Neue Version des App-Branches holen, z. B. `git -C apps/svan_paperless_bridge pull`.
+3. `bench --site $SITE migrate` (aktualisiert auch die Zusatzfelder und die zeitgesteuerten Aufträge) und `bench build --app svan_paperless_bridge` ausführen.
+4. Bench neu starten (`bench restart`).
+
+`bench update` erledigt die Schritte 2 bis 4 für alle Apps der Bench auf einmal.
 
 Ein Update von einer Version ohne *Archivieren statt löschen* schaltet die Option ein. Danach löscht das Löschen einer Datei in ERPNext nichts mehr in Paperless NGX. Wer das bisherige Verhalten behalten will, schaltet sie in den Einstellungen aus.
-
-Nach einem Upgrade von Frappe oder Paperless NGX prüfen, ob der Webhook-Workflow und das API-Token in Paperless NGX noch vorhanden sind.
 
 ## Deinstallieren
 
